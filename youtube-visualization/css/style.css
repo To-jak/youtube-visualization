@@ -1,0 +1,67 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.grid-container {
+    height: 920px;
+    width: 1000px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.5fr 1.3fr;
+    grid-template-rows: 1.2fr 1.3fr 1.2fr 0.5fr;
+    gap: 1px 1px;
+    grid-template-areas: "category-timegraph-area category-timegraph-area category-timegraph-area sidebar" "category-analysis-area category-analysis-area category-analysis-area sidebar" "category-analysis-area category-analysis-area category-analysis-area sidebar" "timeline-area timeline-area timeline-area timeline-area";
+}
+
+.sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1.2fr 0.8fr 1fr;
+    gap: 1px 1px;
+    grid-template-areas: "tag-trends-area tag-trends-area tag-trends-area" "wordcloud-area wordcloud-area wordcloud-area" "leaderboard-area leaderboard-area leaderboard-area";
+    grid-area: sidebar;
+}
+
+.area-title {
+    position: absolute;
+    font-family: Arial, Helvetica, sans-serif;
+    z-index: 10;
+    left: 20%;
+}
+
+.timeline-area {
+    position: relative;
+    grid-area: timeline-area;
+    background-color: aquamarine;
+}
+
+.category-timegraph-area {
+    position: relative;
+    grid-area: category-timegraph-area;
+    background-color: blueviolet;
+}
+
+.category-analysis-area {
+    position: relative;
+    grid-area: category-analysis-area;
+    background-color: blue;
+}
+
+.tag-trends-area {
+    position: relative;
+    grid-area: tag-trends-area;
+    background-color: burlywood;
+}
+
+.wordcloud-area {
+    position: relative;
+    grid-area: wordcloud-area;
+    background-color: crimson;
+}
+
+.leaderboard-area {
+    position: relative;
+    grid-area: leaderboard-area;
+    background-color: darkgoldenrod;
+}
