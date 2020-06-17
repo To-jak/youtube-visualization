@@ -11,6 +11,10 @@
 
     <!-- D3.js -->
     <script type="text/javascript" src="js/d3/d3.js"></script>
+
+    <!-- Range slider code and style-->
+    <!-- from https://github.com/RasmusFonseca/d3RangeSlider-->
+    <script src="js/d3RangeSlider.js"></script>
 </head>
 
 <body>
@@ -29,8 +33,10 @@
 
         <!-- Timeline-->
         <div class="timeline-area" id="Timeline">
-            <h1 class="area-title">Timeline</h1>
-        </div>        
+            <h1 class="area-title">Timeline Slider</h1>
+            <div id="slider-container"></div>
+            <div id="range-label"></div>
+        </div>
 
         <div class="sidebar" id="SideBar">
 
