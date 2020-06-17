@@ -67,6 +67,7 @@ d3.csv('data/FRvideos.csv')
         dataset = rows;
         
         draw_cat_analysis();
+        draw_leaderboard();
     });
 
 // Category Time Graph /////////////////////////////////////////////////
@@ -91,6 +92,7 @@ function draw_cat_analysis() {
         .entries(dataset);
 
     var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 60])
+
     var simulation = d3.forceSimulation()
         .force("x", d3.forceX(width / 2).strength(0.05))
         .force("y", d3.forceY(height / 2).strength(0.05))
@@ -124,10 +126,76 @@ function draw_cat_analysis() {
     }
 }
 
+// Leaderboard /////////////////////////////////////////////////
+function draw_leaderboard() {
+
+    // Get height and width of the HTML container
+    var height = document.getElementById("Leaderboard").clientHeight
+    var width = document.getElementById("Leaderboard").clientWidth
+
+    console.log(height, width)
+
+    var top_channel = d3.nest()
+        .key(function (d) {
+            //for (var i = 0; i < 10; i++) {
+            return d.channel_title;
+            })
+        .entries(dataset);
+
+    console.log(top_channel.length)
+
+    var svg_table = d3.select("#Leaderboard")
+        .append("svg")
+        .attr("viewBox", "0 0 " + width + " " + height)
+        .attr("transform", "translate(0, 0)")
+        .append("table")
+        .style("border-collapse", "collapse")
+        .style("border", "2px black solid");
+    
+    var logo_trophee = d3.select('body')
+        .append('svg')
+        .selectAll("image")
+        .append("svg:image")
+        .attr('x', 10)
+        .attr('y', 10)
+        .attr('width', 30)
+        .attr('height', 30)
+        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
+
+	var thead = svg_table.append('thead')
+	var tbody = svg_table.append('tbody')
+
+  // headers
+	thead.append('tr')
+        .selectAll('th')
+	    .append('th')
+        .text("LEADERBOARD")
+        .style("border", "1px black solid")
+        .style("padding", "5px")
+        .style("background-color", "lightgray")
+        .style("font-weight", "bold")
+        .style("text-transform", "uppercase")
+
+  // data
+	var rows = tbody.selectAll('tr')
+	    .data(top_channel)
+	    .enter()
+	    .append('tr')
+	var cells = rows.selectAll('td')
+        .enter()
+        .append('td')
+        .text(function (d) { return d.value })
+        .style("border", "1px black solid")
+        .style("padding", "5px")
+        .on("mouseover", function(){  d3.select(this).style("background-color", "powderblue")})
+        .on("mouseout", function(){ d3.select(this).style("background-color", "white")})
+        .style("font-size", "12px")
+
+}
+
 // Tag Trends /////////////////////////////////////////////////
 
 // Word Cloud /////////////////////////////////////////////////
 
-// Leaderboard /////////////////////////////////////////////////
 
 // Timeline /////////////////////////////////////////////////
