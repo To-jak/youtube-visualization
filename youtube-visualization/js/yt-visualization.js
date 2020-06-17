@@ -142,7 +142,7 @@ function draw_leaderboard() {
             })
         .entries(dataset);
 
-    console.log(top_channel.length)
+    console.log("ranking = " + top_channel.length + " data")
 
     var svg_table = d3.select("#Leaderboard")
         .append("svg")
@@ -152,9 +152,11 @@ function draw_leaderboard() {
         .style("border-collapse", "collapse")
         .style("border", "2px black solid");
     
-    var logo_trophee = d3.select('body')
+    var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
         .selectAll("image")
+        .data([0])
+        .enter()
         .append("svg:image")
         .attr('x', 10)
         .attr('y', 10)
