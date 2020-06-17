@@ -30,11 +30,15 @@ html, body {
     left: 20%;
 }
 
+/****** TIMELINE ******/
+
 .timeline-area {
     position: relative;
     grid-area: timeline-area;
     background-color: aquamarine;
 }
+
+/****** CATEGORY TIMEGRAPH ******/
 
 .category-timegraph-area {
     position: relative;
@@ -42,11 +46,15 @@ html, body {
     background-color: blueviolet;
 }
 
+/****** CATEGORY ANALYSIS ******/
+
 .category-analysis-area {
     position: relative;
     grid-area: category-analysis-area;
     background-color: blue;
 }
+
+/****** TAG TRENDS ******/
 
 .tag-trends-area {
     position: relative;
@@ -54,11 +62,15 @@ html, body {
     background-color: burlywood;
 }
 
+/****** WORDCLOUD ******/
+
 .wordcloud-area {
     position: relative;
     grid-area: wordcloud-area;
     background-color: crimson;
 }
+
+/****** LEADERBOARD ******/
 
 .leaderboard-area {
     position: relative;
