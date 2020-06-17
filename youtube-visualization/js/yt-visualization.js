@@ -65,7 +65,8 @@ d3.csv('data/FRvideos.csv')
         }
 
         dataset = rows;
-        
+        init_timeline_range();
+
         draw_cat_analysis();
     });
 
@@ -131,3 +132,42 @@ function draw_cat_analysis() {
 // Leaderboard /////////////////////////////////////////////////
 
 // Timeline /////////////////////////////////////////////////
+
+
+
+// This scale is used to map slider values to dates
+// range is left undecided until some data hase been loaded
+SLIDE_MAX = 1000
+time_scale = d3.scaleTime().range([0, SLIDE_MAX]);
+var time_range = [0,0];
+date_formatter = d3.timeFormat("%x");// %x is locale format for dates
+
+function filter_by_time(d){
+    // Filter data entries with .filter(filter_by_time)
+    let c1 = d.publish_time >= time_scale(time_range[0]);
+    let c2 = d.publish_time <= time_scale(time_range[1]);
+    return  c1 && c2
+}
+
+function init_timeline_range(){
+    // Call upon loading the dataset to set the scale range
+    tmp = d3.extent(dataset, d => d.publish_time);
+    console.log(tmp);
+    time_scale.domain(d3.extent(dataset, d => d.publish_time));
+    slider.range(0,SLIDE_MAX);
+
+
+}
+
+var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
+
+slider.onChange(function(newRange){
+    time_range = [time_scale.invert(newRange.begin), time_scale.invert(newRange.end)];
+
+
+    d3.select("#range-label")
+        .html(date_formatter(time_range[0]) + " &mdash; " + date_formatter(time_range[1]));
+
+    //update_all();
+
+    });
