@@ -1,5 +1,5 @@
 // Utils /////////////////////////////////////////////////
-var parseDate = d3.timeParse("%Y.%d.%m");
+var parseDate = d3.timeParse("%Y-%d-%m");
 var parseTime = d3.timeParse("%H:%M:%S")
 
 var category_id_to_name = {
@@ -85,9 +85,87 @@ d3.csv('data/clean_data.csv')
         draw_cat_analysis();
         draw_trend_heatmap();
         draw_leaderboard();
+        draw_time_graph();
     });
 
 // Category Time Graph /////////////////////////////////////////////////
+
+function draw_time_graph() {
+
+    // Get height and width of the HTML container
+    var svg_height = document.getElementById("CategoryTimeGraph").clientHeight
+    var svg_width = document.getElementById("CategoryTimeGraph").clientWidth
+
+    console.log(svg_height)
+    console.log(svg_width)
+
+    var catTimeGraph = d3.select("#CategoryTimeGraph")
+
+    // set the dimensions and margins of the graph
+    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+        width = svg_width - margin.left - margin.right,
+        height = svg_height - margin.top - margin.bottom;
+
+    // append the svg object to the body of the page
+    var svg = d3.select("#CategoryTimeGraph")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    var firstDate = d3.min(dataset, function (d) { return d.publish_date })
+    var lastDate = d3.max(dataset, function (d) { return d.publish_date })
+
+    console.log(firstDate)
+    console.log(lastDate)
+
+    // Add X axis --> it is a date format
+    var x = d3.scaleTime()
+        .domain([firstDate, lastDate])
+        .range([0, width]).nice();
+
+    var histogram = d3.histogram()
+        .value(function (d) { return d.publish_date; })
+        .domain(x.domain())
+        .thresholds(x.ticks(d3.timeMonth));
+
+    var cat_data = d3.nest()
+        .key(function (d) { return d.category; })
+        .entries(dataset)
+
+    hist_dict = {}
+    cat_data.forEach(element => {
+        bins = histogram(element.values)
+        line = bins.map(element => ({date: element.x0, nb_videos: element.length }))
+        hist_dict[element.key] = line
+    });
+
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    // Add Y axis
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(hist_dict['Entertainment'], d => d.nb_videos)])
+        .range([height, 0]);
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    console.log(hist_dict['Entertainment'])
+
+    // Add the line
+    svg.append("path")
+        .datum(hist_dict['Entertainment'])
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(function (d) { return x(d.date) })
+            .y(function (d) { return y(d.nb_videos) })
+        )
+}
 
 // Category Analysis /////////////////////////////////////////////////
 
@@ -128,7 +206,7 @@ function draw_cat_analysis() {
     var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
     var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
 
-    var maxRatio = d3.max(cat_data, function(d) { return d.value['like_ratio'];} );
+    var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
     var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, maxRatio])
 
     var circles_g = catAnalysisSVG.selectAll("g")
@@ -152,31 +230,33 @@ function draw_cat_analysis() {
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", function(d){
-            if (!d3.select(this).classed("selected") ){
-                if(selected_categories.size == 0) {
+        .on("click", function (d) {
+            if (!d3.select(this).classed("selected")) {
+                if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", true)
                 }
-                selected_categories.add(d.key)    
+                selected_categories.add(d.key)
                 d3.select(this).classed("not-selected", false)
                 d3.select(this).classed("selected", true)
-               console.log(selected_categories)
-            }else{
+                d3.select(this.childNodes[0]).attr('fill-opacity', 1)
+                console.log(selected_categories)
+            } else {
                 selected_categories.delete(d.key)
-                if(selected_categories.size == 0) {
+                if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", false)
                 }
-               d3.select(this).classed("selected", false);
-               console.log(selected_categories)
-            }});
+                d3.select(this).classed("selected", false);
+                console.log(selected_categories)
+            }
+        });
 
     // Circles
-    circles_g.append("circle")
+    var circles = circles_g.append("circle")
         .attr("class", "category-circle")
         .attr("r", function (d) {
             return radiusScale(d.value['nb_videos'])
         })
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
             return likeRatioColor(d.value['like_ratio'])
         })
 
