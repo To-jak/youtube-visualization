@@ -148,11 +148,9 @@ function draw_leaderboard() {
 
     console.log("==== LEADERBOARD ====")
 
-
     // Get height and width of the HTML container
     var height = document.getElementById("Leaderboard").clientHeight
     var width  = document.getElementById("Leaderboard").clientWidth
-
     console.log("size = "+ height+" x "+ width)
 
     // group videos by channel
@@ -171,10 +169,10 @@ function draw_leaderboard() {
     for (i=0;i<10;i++) { 
         top_channel[i] = views_by_channel[i].key
     }
-
     console.log("top 10 channel by views = ", top_channel)
 
-    var svg_table = d3.select("#Leaderboard")
+    // create table
+    /*var svg_table = d3.select("#Leaderboard")
         .append("svg")
         .attr("viewBox", "0 0 " + width + " " + height)
         .attr("transform", "translate(0, 0)")
@@ -202,7 +200,7 @@ function draw_leaderboard() {
 
     var title = "LEADERBOARD"
 
-  // headers
+    // headers
 	thead.append('tr')
         .selectAll('th')
         .append('th')
@@ -215,30 +213,24 @@ function draw_leaderboard() {
         .style("font-weight", "bold")
         .style("text-transform", "uppercase")
 
-
-
-  // data
+    // data
 	var rows = tbody.selectAll('tr')
 	    .data(top_channel)
 	    .enter()
         .append('tr')
 
     rows.selectAll('td')
-        .data(function(d){
-            return titles.map(function(i) {
-              return {
-                'value': d[i]
-              };
-            });
-          })
+        .data(function(d){ return titles.map(function(i) { return { 'value': d[i] }; }); })
         .enter()
         .append('td')
-        .text(function (d) { return d.value })
+        .text(function (d) { 
+            console.log(d.value); 
+            return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
-        .on("mouseover", function(){  d3.select(this).style("background-color", "powderblue")})
+        .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
         .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
-        .style("font-size", "12px")
+        .style("font-size", "12px")*/
 
 }
 
