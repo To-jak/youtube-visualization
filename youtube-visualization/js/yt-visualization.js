@@ -172,12 +172,12 @@ function draw_leaderboard() {
     console.log("top 10 channel by views = ", top_channel)
 
     // create table
-    /*var svg_table = d3.select("#Leaderboard")
+    var svg_table = d3.select("#Leaderboard")
         .append("svg")
         .attr("viewBox", "0 0 " + width + " " + height)
         .attr("transform", "translate(0, 0)")
     
-    var logo_trophee = d3.select('#Leaderboard')
+    /*var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
         .selectAll("image")
         .data([0])
@@ -187,7 +187,7 @@ function draw_leaderboard() {
         .attr('y', 10)
         .attr('width', 30)
         .attr('height', 30)
-        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
+        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")*/
 
     var table = svg_table.select("body")
         .append('table')
@@ -230,7 +230,7 @@ function draw_leaderboard() {
         .style("padding", "5px")
         .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
         .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
-        .style("font-size", "12px")*/
+        .style("font-size", "12px")
 
 }
 

@@ -124,5 +124,6 @@ html, body {
 .leaderboard-area {
     position: relative;
     grid-area: leaderboard-area;
-    background-color: darkgoldenrod;
+    background-color: rgb(247, 250, 83);
+    overflow: scroll
 }
