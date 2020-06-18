@@ -1,6 +1,6 @@
 // Utils /////////////////////////////////////////////////
-var parseTrendingDate = d3.timeParse("%Y.%d.%m");
-var parsePublishDate = d3.timeParse("%Y-%m-%dT%H:%M:%S.000Z")
+var parseDate = d3.timeParse("%Y.%d.%m");
+var parseTime = d3.timeParse("%H:%M:%S")
 
 var category_id_to_name = {
     1: "Film & Animation",
@@ -39,25 +39,40 @@ var category_id_to_name = {
 // Loading Data /////////////////////////////////////////////////
 
 let dataset = [];
-
-d3.csv('data/FRvideos.csv')
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
+}
+d3.csv('data/clean_data.csv')
     .row((d, i) => {
+        function parseTags(tags){
+            out = []
+            if (tags) out =  tags.slice(2,-2).split("', '").filter(onlyUnique);
+            return out
+        }
+        // remove leading "[' trailing']" and split
         return {
-            category: category_id_to_name[+d.category_id],
+            category: d.category,
+            category_id: +d.category_id,
             channel_title: d.channel_title,
             comment_count: +d.comment_count,
             description: d.description,
             dislikes: +d.dislikes,
             likes: +d.likes,
-            publish_time: parsePublishDate(d.publish_time),
-            tags: d.tags.split("\"|\""),
+            publish_date: parseDate(d.publish_date),
+            publish_time: parseTime(d.publish_time),
+            tags: parseTags(d.tags),
             thumbnail_link: d.thumbnail_link,
             title: d.title,
-            trending_date: parseTrendingDate(d.trending_date),
-            views: +d.views
+            trending_date: parseDate(d.trending_date),
+            views: +d.views,
+            trend_duration: +d.trend_duration,
+            publish_to_trend: +d.publish_to_trend,
+            publish_to_trend_last: +d.publish_to_trend_last
+            
         }
     })
     .get((error, rows) => {
+        console.log(error)
         console.log("loaded " + rows.length + " rows");
         if (rows.length > 0) {
             console.log('First row:', rows[0])
@@ -65,8 +80,10 @@ d3.csv('data/FRvideos.csv')
         }
 
         dataset = rows;
-        
+        init_timeline_range();
+
         draw_cat_analysis();
+        draw_trend_heatmap();
         draw_leaderboard();
     });
 
@@ -206,8 +223,75 @@ function draw_leaderboard() {
 }
 
 // Tag Trends /////////////////////////////////////////////////
+function draw_trend_heatmap(){}
+/*
+// TODO REPLACE BY ACTUAL FILTER ON CATEGORIES
+function draw_trend_heatmap(){
+    let height = document.getElementById("TagTrends").clientHeight
+    let width = document.getElementById("TagTrends").clientWidth
+    let margin_left = 20;
+    let margin_top = 20;
+    let svg_svg_trend = d3.select("#Leaderboard")
+        .append("svg")
+        .attr("width",width)
+        .attr("height",height)
+        .append("g")
+        .attr("transform",
+        "translate(" + h_margin + "," + v_margin + ")");
+
+    // Build X scales and axis:
+    d3.select("#road").selectAll("option")
+    .data(d3.map(data, function(d){return d.roadname;}).keys())
+    .enter()
+
+    var y = d3.scaleBand()
+        .range([ height-2*v_margin, 0 ])
+        .domain(myVars)
+        .padding(0.01);
+    svg.append("g")
+    .   call(d3.axisLeft(y));
+
+}
+*/
 
 // Word Cloud /////////////////////////////////////////////////
 
 
 // Timeline /////////////////////////////////////////////////
+
+// This scale is used to map slider values to dates
+// range is left undecided until some data hase been loaded
+SLIDE_MAX = 1000
+time_scale = d3.scaleTime().range([0, SLIDE_MAX]);
+var time_range = [0,0];
+date_formatter = d3.timeFormat("%x");// %x is locale format for dates
+
+function filter_by_time(d){
+    // Filter data entries with .filter(filter_by_time)
+    let c1 = d.publish_time >= time_scale(time_range[0]);
+    let c2 = d.publish_time <= time_scale(time_range[1]);
+    return  c1 && c2
+}
+
+function init_timeline_range(){
+    // Call upon loading the dataset to set the scale range
+    tmp = d3.extent(dataset, d => d.publish_time);
+    console.log(tmp);
+    time_scale.domain(d3.extent(dataset, d => d.publish_time));
+    slider.range(0,SLIDE_MAX);
+
+
+}
+
+var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
+
+slider.onChange(function(newRange){
+    time_range = [time_scale.invert(newRange.begin), time_scale.invert(newRange.end)];
+
+
+    d3.select("#range-label")
+        .html(date_formatter(time_range[0]) + " &mdash; " + date_formatter(time_range[1]));
+
+    //update_all();
+
+    });
