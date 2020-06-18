@@ -155,16 +155,24 @@ function draw_leaderboard() {
 
     console.log("size = "+ height+" x "+ width)
 
-    // sort channel by views   /!\ currently one row is one video 
-    console.log("before sort = ", dataset[0].channel_title)
-    dataset.sort(function(x, y){ return d3.descending(x.views, y.views)})
-    console.log("after sort  = ", dataset[0].channel_title)
+    // group videos by channel
+    views_by_channel = d3.nest()
+        .key(function(d){ return d.channel_title })
+        .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
+        .entries(dataset)
+
+    console.log("views_by_channel = ", views_by_channel)
+
+    // sort channel by views 
+    console.log("before sort = ", views_by_channel[0])
+    views_by_channel.sort(function(x, y){ return d3.descending(x.value, y.value)})
+    console.log("after sort  = ", views_by_channel[0])
     var top_channel = []
     for (i=0;i<10;i++) { 
-        top_channel[i] = dataset[i].channel_title
+        top_channel[i] = views_by_channel[i].key
     }
 
-    console.log("Ranking = ", top_channel)
+    console.log("top 10 channel by views = ", top_channel)
 
     var svg_table = d3.select("#Leaderboard")
         .append("svg")
@@ -192,25 +200,37 @@ function draw_leaderboard() {
 	var thead = table.append('thead')
 	var tbody = table.append('tbody')
 
+    var title = "LEADERBOARD"
+
   // headers
 	thead.append('tr')
         .selectAll('th')
-	    .append('th')
-        .text("LEADERBOARD")
+        .append('th')
+        .data(title)
+        .enter()
+        .text(function(d) { return d; })
         .style("border", "1px black solid")
         .style("padding", "5px")
         .style("background-color", "lightgray")
         .style("font-weight", "bold")
         .style("text-transform", "uppercase")
 
+
+
   // data
 	var rows = tbody.selectAll('tr')
 	    .data(top_channel)
 	    .enter()
         .append('tr')
-        .text(function (d) { return d.value })
-    var cells = rows.selectAll('td')
-        .data(function(row) { return columns.map(function (column) { return { column: column, value: row } }) })
+
+    rows.selectAll('td')
+        .data(function(d){
+            return titles.map(function(i) {
+              return {
+                'value': d[i]
+              };
+            });
+          })
         .enter()
         .append('td')
         .text(function (d) { return d.value })
