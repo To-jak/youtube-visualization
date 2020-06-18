@@ -100,7 +100,27 @@ html, body {
 .category-analysis-area {
     position: relative;
     grid-area: category-analysis-area;
-    background-color: blue;
+    outline: 1px solid black;
+    outline-offset: -1px;
+}
+
+.cat-tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: auto;					
+    height: auto;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: white;	
+    border: 1px solid black;		
+    border-radius: 5px;	
+    pointer-events: none;			
+}
+
+.category-circle-text {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    z-index: 10;
 }
 
 /****** TAG TRENDS ******/
