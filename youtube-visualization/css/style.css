@@ -100,7 +100,47 @@ html, body {
 .category-analysis-area {
     position: relative;
     grid-area: category-analysis-area;
-    background-color: blue;
+    outline: 1px solid black;
+    outline-offset: -1px;
+}
+
+g.selected > .category-circle {
+    opacity: 1;
+    stroke: black;
+}
+
+g.not-selected {
+    opacity: 0.2;
+}
+
+.cat-tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: auto;					
+    height: auto;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: white;	
+    border: 1px solid black;		
+    border-radius: 5px;	
+    pointer-events: none;			
+}
+
+.cat-tooltip > .tooltip-header {
+    font-weight: bolder;
+    margin-bottom: 3px;
+}
+
+.cat-tooltip > .tooltip-content {
+    text-align: left;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+.category-circle-text {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    z-index: 10;
 }
 
 /****** TAG TRENDS ******/
