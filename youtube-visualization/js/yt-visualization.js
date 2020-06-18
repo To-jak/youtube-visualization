@@ -129,20 +129,30 @@ function draw_cat_analysis() {
 // Leaderboard /////////////////////////////////////////////////
 function draw_leaderboard() {
 
+    console.log("==== LEADERBOARD ====")
+
+
     // Get height and width of the HTML container
     var height = document.getElementById("Leaderboard").clientHeight
-    var width = document.getElementById("Leaderboard").clientWidth
+    var width  = document.getElementById("Leaderboard").clientWidth
 
-    console.log(height, width)
+    console.log("size = "+ height+" x "+ width)
 
-    var top_channel = d3.nest()
-        .key(function (d) {
-            //for (var i = 0; i < 10; i++) {
-            return d.channel_title;
-            })
-        .entries(dataset);
+    /*var top_channel = d3.nest()
+        .key(function (d) { return d.channel_title; })
+        .entries(dataset);*/
 
-    console.log("ranking = " + top_channel.length + " data")
+    // sort channel by views
+    console.log("before sort = ", dataset[0].channel_title)
+    dataset.sort(function(x, y){ return d3.descending(x.views, y.views)})
+    console.log("after sort  = ", dataset[0].channel_title)
+
+    var top_channel = []
+    for(i=0;i<10;i++) { 
+         top_channel[i] = dataset[i].channel_title
+    }
+
+    console.log("Ranking = ", top_channel)
 
     var svg_table = d3.select("#Leaderboard")
         .append("svg")
