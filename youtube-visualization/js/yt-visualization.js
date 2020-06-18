@@ -155,15 +155,10 @@ function draw_leaderboard() {
 
     console.log("size = "+ height+" x "+ width)
 
-    /*var top_channel = d3.nest()
-        .key(function (d) { return d.channel_title; })
-        .entries(dataset);*/
-
-    // sort channel by views
+    // sort channel by views   /!\ currently one row is one video 
     console.log("before sort = ", dataset[0].channel_title)
     dataset.sort(function(x, y){ return d3.descending(x.views, y.views)})
     console.log("after sort  = ", dataset[0].channel_title)
-
     var top_channel = []
     for(i=0;i<10;i++) { 
          top_channel[i] = dataset[i].channel_title
