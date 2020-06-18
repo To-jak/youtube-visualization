@@ -216,33 +216,36 @@ function draw_leaderboard() {
 
     console.log("==== LEADERBOARD ====")
 
-
     // Get height and width of the HTML container
     var height = document.getElementById("Leaderboard").clientHeight
-    var width = document.getElementById("Leaderboard").clientWidth
+    var width  = document.getElementById("Leaderboard").clientWidth
+    console.log("size = "+ height+" x "+ width)
 
-    console.log("size = " + height + " x " + width)
+    // group videos by channel
+    views_by_channel = d3.nest()
+        .key(function(d){ return d.channel_title })
+        .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
+        .entries(dataset)
 
-    // sort channel by views   /!\ currently one row is one video 
-    console.log("before sort = ", dataset[0].channel_title)
-    dataset.sort(function (x, y) { return d3.descending(x.views, y.views) })
-    console.log("after sort  = ", dataset[0].channel_title)
+    console.log("views_by_channel = ", views_by_channel)
+
+    // sort channel by views 
+    console.log("before sort = ", views_by_channel[0])
+    views_by_channel.sort(function(x, y){ return d3.descending(x.value, y.value)})
+    console.log("after sort  = ", views_by_channel[0])
     var top_channel = []
-    for (i = 0; i < 10; i++) {
-        top_channel[i] = dataset[i].channel_title
+    for (i=0;i<10;i++) { 
+        top_channel[i] = views_by_channel[i].key
     }
+    console.log("top 10 channel by views = ", top_channel)
 
-    console.log("Ranking = ", top_channel)
-
+    // create table
     var svg_table = d3.select("#Leaderboard")
         .append("svg")
         .attr("viewBox", "0 0 " + width + " " + height)
         .attr("transform", "translate(0, 0)")
-        .append("table")
-        .style("border-collapse", "collapse")
-        .style("border", "2px black solid");
-
-    var logo_trophee = d3.select('#Leaderboard')
+    
+    /*var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
         .selectAll("image")
         .data([0])
@@ -252,16 +255,26 @@ function draw_leaderboard() {
         .attr('y', 10)
         .attr('width', 30)
         .attr('height', 30)
-        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
+        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")*/
 
-    var thead = svg_table.append('thead')
-    var tbody = svg_table.append('tbody')
+    var table = svg_table.select("body")
+        .append('table')
+        .style("border-collapse", "collapse")
+        .style("border", "2px black solid")      
+        .attr("x", "200")
+        .attr("y", "200")
+	var thead = table.append('thead')
+	var tbody = table.append('tbody')
+
+    var title = "LEADERBOARD"
 
     // headers
-    thead.append('tr')
+	thead.append('tr')
         .selectAll('th')
         .append('th')
-        .text("LEADERBOARD")
+        .data(title)
+        .enter()
+        .text(function(d) { return d; })
         .style("border", "1px black solid")
         .style("padding", "5px")
         .style("background-color", "lightgray")
@@ -269,18 +282,22 @@ function draw_leaderboard() {
         .style("text-transform", "uppercase")
 
     // data
-    var rows = tbody.selectAll('tr')
-        .data(top_channel)
-        .enter()
+	var rows = tbody.selectAll('tr')
+	    .data(top_channel)
+	    .enter()
         .append('tr')
-    var cells = rows.selectAll('td')
+
+    rows.selectAll('td')
+        .data(function(d){ return titles.map(function(i) { return { 'value': d[i] }; }); })
         .enter()
         .append('td')
-        .text(function (d) { return d.value })
+        .text(function (d) { 
+            console.log(d.value); 
+            return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
-        .on("mouseover", function () { d3.select(this).style("background-color", "powderblue") })
-        .on("mouseout", function () { d3.select(this).style("background-color", "white") })
+        .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
+        .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
         .style("font-size", "12px")
 
 }
