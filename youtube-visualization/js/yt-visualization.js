@@ -160,8 +160,8 @@ function draw_leaderboard() {
     dataset.sort(function(x, y){ return d3.descending(x.views, y.views)})
     console.log("after sort  = ", dataset[0].channel_title)
     var top_channel = []
-    for(i=0;i<10;i++) { 
-         top_channel[i] = dataset[i].channel_title
+    for (i=0;i<10;i++) { 
+        top_channel[i] = dataset[i].channel_title
     }
 
     console.log("Ranking = ", top_channel)
@@ -170,9 +170,6 @@ function draw_leaderboard() {
         .append("svg")
         .attr("viewBox", "0 0 " + width + " " + height)
         .attr("transform", "translate(0, 0)")
-        .append("table")
-        .style("border-collapse", "collapse")
-        .style("border", "2px black solid");
     
     var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
@@ -186,8 +183,14 @@ function draw_leaderboard() {
         .attr('height', 30)
         .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
 
-	var thead = svg_table.append('thead')
-	var tbody = svg_table.append('tbody')
+    var table = svg_table.select("body")
+        .append('table')
+        .style("border-collapse", "collapse")
+        .style("border", "2px black solid")      
+        .attr("x", "200")
+        .attr("y", "200")
+	var thead = table.append('thead')
+	var tbody = table.append('tbody')
 
   // headers
 	thead.append('tr')
@@ -204,15 +207,17 @@ function draw_leaderboard() {
 	var rows = tbody.selectAll('tr')
 	    .data(top_channel)
 	    .enter()
-	    .append('tr')
-	var cells = rows.selectAll('td')
+        .append('tr')
+        .text(function (d) { return d.value })
+    var cells = rows.selectAll('td')
+        .data(function(row) { return columns.map(function (column) { return { column: column, value: row } }) })
         .enter()
         .append('td')
         .text(function (d) { return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
         .on("mouseover", function(){  d3.select(this).style("background-color", "powderblue")})
-        .on("mouseout", function(){ d3.select(this).style("background-color", "white")})
+        .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
         .style("font-size", "12px")
 
 }
