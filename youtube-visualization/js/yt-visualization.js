@@ -91,6 +91,7 @@ d3.csv('data/clean_data.csv')
 
 // Category Analysis /////////////////////////////////////////////////
 
+var selected_categories = new Set();;
 function draw_cat_analysis() {
 
     // Define the div element for the tooltip
@@ -127,17 +128,22 @@ function draw_cat_analysis() {
     var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
     var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
 
+    var maxRatio = d3.max(cat_data, function(d) { return d.value['like_ratio'];} );
+    var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, maxRatio])
+
     var circles_g = catAnalysisSVG.selectAll("g")
         .data(cat_data).enter().append("g").attr("transform", "translate(0,0)")
+        .classed("selected", false)
         .on("mouseover", function (d) {
             cat_tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
-            cat_tooltip.html("<b>" + d.key + "</b><br/>"
+            cat_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>"
+                + "<div class=\"tooltip-content\">"
                 + "Videos: " + d.value['nb_videos'] + "<br/>"
                 + "Views: " + d.value['total_views'] + "<br/>"
-                + "Likes: " + d.value['total_likes'] + "<br/>"
-                + "Dislikes: " + d.value['total_dislikes'] + "<br/>")
+                + "<i class=\"fa fa-thumbs-up\" aria-hidden=\"true\"></i>" + d.value['total_likes'] + "<br/>"
+                + "<i class=\"fa fa-thumbs-down\" aria-hidden=\"true\"></i>" + d.value['total_dislikes'] + "<br/></div>")
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
         })
@@ -145,7 +151,24 @@ function draw_cat_analysis() {
             cat_tooltip.transition()
                 .duration(500)
                 .style("opacity", 0);
-        });
+        })
+        .on("click", function(d){
+            if (!d3.select(this).classed("selected") ){
+                if(selected_categories.size == 0) {
+                    catAnalysisSVG.selectAll("g").classed("not-selected", true)
+                }
+                selected_categories.add(d.key)    
+                d3.select(this).classed("not-selected", false)
+                d3.select(this).classed("selected", true)
+               console.log(selected_categories)
+            }else{
+                selected_categories.delete(d.key)
+                if(selected_categories.size == 0) {
+                    catAnalysisSVG.selectAll("g").classed("not-selected", false)
+                }
+               d3.select(this).classed("selected", false);
+               console.log(selected_categories)
+            }});
 
     // Circles
     circles_g.append("circle")
@@ -153,7 +176,9 @@ function draw_cat_analysis() {
         .attr("r", function (d) {
             return radiusScale(d.value['nb_videos'])
         })
-        .attr("fill", "lightblue")
+        .attr("fill", function(d) {
+            return likeRatioColor(d.value['like_ratio'])
+        })
 
     circles_g.append("text")
         .attr("class", "category-circle-text")
