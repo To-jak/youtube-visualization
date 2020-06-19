@@ -1,15 +1,16 @@
 html, body {
     height: 100%;
     margin: 0;
+    margin-top: 5px;
 }
 
 .grid-container {
-    height: 920px;
+    height: 910px;
     width: 1000px;
     margin: auto;
     display: grid;
     grid-template-columns: 1fr 1fr 0.5fr 1.3fr;
-    grid-template-rows: 1.2fr 1.3fr 1.2fr 0.5fr;
+    grid-template-rows: 1.2fr 1.3fr 1.2fr 0.3fr;
     gap: 1px 1px;
     grid-template-areas: "category-timegraph-area category-timegraph-area category-timegraph-area sidebar" "category-analysis-area category-analysis-area category-analysis-area sidebar" "category-analysis-area category-analysis-area category-analysis-area sidebar" "timeline-area timeline-area timeline-area timeline-area";
 }
@@ -160,6 +161,8 @@ g.not-selected {
 .tag-trends-area {
     position: relative;
     grid-area: tag-trends-area;
+    outline: 1px solid black;
+    outline-offset: -1px;
 }
 
 #trend_dropdown{
@@ -233,4 +236,6 @@ g.not-selected {
     overflow-y: scroll;
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
+    outline: 1px solid black;
+    outline-offset: -1px;
 }
