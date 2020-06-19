@@ -346,7 +346,7 @@ function draw_leaderboard() {
     views_by_channel.sort(function(x, y){ return d3.descending(x.value, y.value)})
     console.log("after sort  = ", views_by_channel[0])
     var top_channel = []
-    for (i=0;i<10;i++) { 
+    for (i=0;i<20;i++) { 
         top_channel[i] = views_by_channel[i].key
     }
     console.log("top 10 channel by views = ", top_channel)
@@ -367,11 +367,12 @@ function draw_leaderboard() {
     var table =  d3.select("#Leaderboard")
         .append('table')
         .style("border-collapse", "collapse")
-        .style("border", "2px black solid")      
+        .style("border", "2px black solid")
+        .style("text-anchor", "middle")    
         .attr("x", "50")
         .attr("y", "50")
-        .attr("width", "50")
-        .attr("height", "50");
+        .attr("width", "200")
+        .attr("height", "100");
 	var thead = table.append('thead')
 	var tbody = table.append('tbody')
 
@@ -403,9 +404,12 @@ function draw_leaderboard() {
         .text(function (d) { return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
+        .style("text-anchor", "middle")
         .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
         .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
         .style("font-size", "12px")
+    
+    console.log("=================")
 
     return table
 
