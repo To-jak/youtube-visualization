@@ -93,6 +93,11 @@ d3.csv('data/clean_data.csv')
 
 function draw_time_graph() {
 
+    // Define the div element for the tooltip
+    var time_tooltip = d3.select("body").append("div")
+    .attr("class", "cat-tooltip")
+    .style("opacity", 0);
+    
     // Get height and width of the HTML container
     var svg_height = document.getElementById("CategoryTimeGraph").clientHeight
     var svg_width = document.getElementById("CategoryTimeGraph").clientWidth
@@ -112,7 +117,7 @@ function draw_time_graph() {
             "translate(" + margin.left + "," + margin.top + ")");
 
     // getting first and last date from the data
-    var firstDate = new Date(2017, 0, 1) //d3.min(dataset, function (d) { return d.publish_date })
+    var firstDate = new Date(2017, 7, 1) //d3.min(dataset, function (d) { return d.publish_date })
     var lastDate = d3.max(dataset, function (d) { return d.publish_date })
 
     console.log(firstDate)
@@ -167,6 +172,7 @@ function draw_time_graph() {
         .data(time_graph_data)
         .enter().append("g").attr("class", "timeline");
 
+    // D3 line applied to the values
     var Line = d3.line().x(function (d) { return x(d.date) })
         .y(function (d) { return y(d.nb_videos) })
 
@@ -174,9 +180,22 @@ function draw_time_graph() {
     timeLines.append("path")
         .attr("fill", "none")
         .attr("stroke", "steelblue")
-        .attr("stroke-width", 1.5)
+        .attr("stroke-width", 2)
         .attr("d", function (d) {
             return Line(d.value)
+        })
+        .on("mouseover", function (d) {
+            time_tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            time_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+            time_tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
         })
 }
 
