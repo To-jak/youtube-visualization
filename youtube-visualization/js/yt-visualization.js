@@ -338,14 +338,14 @@ function draw_leaderboard() {
     console.log("size = "+ height+" x "+ width)
 
     // Add dropdown button menu
-    var leaderboard_filter = ["by views", "by likes", "by comment", "by dislikes"]
-    d3.select("#selectButton")
+    var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
+    var my_dropdown_menu = d3.select("#selectButton")
         .selectAll('myOptions')
         .data(leaderboard_filter)
         .enter()
         .append('option')
-        .text(function (d) { return d; }) // text showed in the menu
-        .attr("value", function (d) { return d; }) // corresponding value returned by the button
+        .text(function (d) { return d[0]; }) // text showed in the menu
+        .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
 
     // group videos by channel
     channel_grouped = d3.nest()
@@ -427,6 +427,22 @@ function draw_leaderboard() {
         .style("font-size", "12px")
         .style("text-anchor", "middle")  
     
+
+    // A function that update the Table
+    function update(selected_filter) {
+        // filter data
+        var dataFilter = data.filter(function(d){return d.name==selected_filter})
+        // Give these new data to update line
+        tbody.datum(dataFilter)
+    }    
+
+    // When the button is changed, run the updateChart function
+    d3.select("#selectButton").on("change", function(d) {
+        var selected_filter = d3.select(this).property("value") // recover the option that has been chosen
+        update(selected_filter) // run the updateChart function with this selected option
+    })
+
+
     console.log("=================")
 
     return table
