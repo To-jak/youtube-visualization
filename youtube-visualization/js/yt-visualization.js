@@ -96,17 +96,12 @@ function draw_time_graph() {
     var svg_height = document.getElementById("CategoryTimeGraph").clientHeight
     var svg_width = document.getElementById("CategoryTimeGraph").clientWidth
 
-    console.log(svg_height)
-    console.log(svg_width)
-
-    var catTimeGraph = d3.select("#CategoryTimeGraph")
-
     // set the dimensions and margins of the graph
     var margin = { top: 10, right: 30, bottom: 30, left: 60 },
         width = svg_width - margin.left - margin.right,
         height = svg_height - margin.top - margin.bottom;
 
-    // append the svg object to the body of the page
+    // append the svg object to the #CategroryTimeGraph div of the page
     var svg = d3.select("#CategoryTimeGraph")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -115,7 +110,8 @@ function draw_time_graph() {
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
 
-    var firstDate = d3.min(dataset, function (d) { return d.publish_date })
+    // getting first and last date from the data
+    var firstDate = new Date(2017, 0, 1) //d3.min(dataset, function (d) { return d.publish_date })
     var lastDate = d3.max(dataset, function (d) { return d.publish_date })
 
     console.log(firstDate)
@@ -126,45 +122,61 @@ function draw_time_graph() {
         .domain([firstDate, lastDate])
         .range([0, width]).nice();
 
+    // histogram to bin the values along time
     var histogram = d3.histogram()
         .value(function (d) { return d.publish_date; })
         .domain(x.domain())
         .thresholds(x.ticks(d3.timeMonth));
 
+    // Grouping by categories
     var cat_data = d3.nest()
         .key(function (d) { return d.category; })
         .entries(dataset)
 
+    // Applying histogram to each category
     hist_dict = {}
+    max_count_along_categories = 0
     cat_data.forEach(element => {
         bins = histogram(element.values)
-        line = bins.map(element => ({date: element.x0, nb_videos: element.length }))
+        line = bins.map(element => ({ date: element.x0, nb_videos: element.length }))
+        max_count_category = d3.max(line, function (d) { return d.nb_videos })
+        if (max_count_category > max_count_along_categories) {
+            max_count_along_categories = max_count_category
+        }
         hist_dict[element.key] = line
     });
 
+    // Add X axis
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
 
     // Add Y axis
     var y = d3.scaleLinear()
-        .domain([0, d3.max(hist_dict['Entertainment'], d => d.nb_videos)])
-        .range([height, 0]);
+        .domain([0, max_count_along_categories])
+        .range([height, 0]).nice();
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    console.log(hist_dict['Entertainment'])
+    time_graph_data = d3.entries(hist_dict)
+
+    console.log(time_graph_data)
+
+    var timeLines = svg.selectAll(".timeline")
+        .data(time_graph_data)
+        .enter().append("g").attr("class", "timeline");
+
+    var Line = d3.line().x(function (d) { return x(d.date) })
+        .y(function (d) { return y(d.nb_videos) })
 
     // Add the line
-    svg.append("path")
-        .datum(hist_dict['Entertainment'])
+    timeLines.append("path")
         .attr("fill", "none")
         .attr("stroke", "steelblue")
         .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-            .x(function (d) { return x(d.date) })
-            .y(function (d) { return y(d.nb_videos) })
-        )
+        .attr("d", function (d) {
+            return Line(d.value)
+        })
 }
 
 // Category Analysis /////////////////////////////////////////////////
