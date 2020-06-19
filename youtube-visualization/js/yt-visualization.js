@@ -73,7 +73,8 @@ d3.csv('data/clean_data.csv')
 
 function init_all(){
     init_timeline_range();
-    init_trend_heatmap();    
+    init_trend_heatmap();
+    init_leaderboard();    
 }
 
 function redraw_all(){
@@ -311,15 +312,7 @@ function ticked() {
         .attr("transform", function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; })
 }
 
-function filter_by_category(d) {
-    // Filter data entries with .filter(filter_by_category)
-    if (selected_categories.size == 0) {
-        return true
-    }
-    else{
-        return selected_categories.has(d.category)
-    }
-}
+
 
 let cat_data
 
@@ -416,6 +409,7 @@ function draw_cat_analysis() {
 
             draw_trend_heatmap();
             draw_time_graph();
+            draw_leaderboard();
         });
 
     // Circles
@@ -471,22 +465,36 @@ function resize_categories() {
     })).alpha(0.2).restart()
 }
 
-// Leaderboard /////////////////////////////////////////////////
-function draw_leaderboard() {
+/************************************************************
+* LEADERBOARD
+************************************************************/
 
-    console.log("==== LEADERBOARD ====")
+// global variable
+var leaderboard={
+    height : document.getElementById("Leaderboard").clientHeight,
+    width : document.getElementById("Leaderboard").clientWidth,
+    group_variable : "views",
+    tbody : undefined
+};
 
-    // Get height and width of the HTML container
-    var height = document.getElementById("Leaderboard").clientHeight
-    var width = document.getElementById("Leaderboard").clientWidth
-    console.log("size = " + height + " x " + width)
+// Drop down callback
+function dropdownLeaderboardCB() {
+    leaderboard.group_variable = d3.select(this).property('value');
+    draw_leaderboard();
+}
+
+function init_leaderboard(){
+    console.log("==== LEADERBOARD INIT ====")
+    console.log("size = " + leaderboard.height + " x " + leaderboard.width)
 
     // Add dropdown button menu
     var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
     var my_dropdown_menu = 
         d3.select("#selectButton")
+            .on("change", dropdownLeaderboardCB)
             .attr('x', 200)
             .attr('y', 50)
+            .attr("class","dropdown")
         .selectAll('myOptions')
         .data(leaderboard_filter)
         .enter()
@@ -494,52 +502,37 @@ function draw_leaderboard() {
             .text(function (d) { return d[0]; }) // text showed in the menu
             .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
 
-    // group videos by channel
-    channel_grouped = d3.nest()
-        .key(function(d){ return d.channel_title })
-        .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
-        .entries(dataset.filter(filter_by_time))
-
-    console.log("channel_grouped = ", channel_grouped)
-
-    // sort channel by views 
-    console.log("before sort = ", channel_grouped[0])
-    channel_grouped.sort(function(x, y){ return d3.descending(x.value, y.value)})
-    console.log("after sort  = ", channel_grouped[0])
-    var top_channel = []
-    for (i=0;i<20;i++) { 
-        top_channel[i] = (i+1) + ". " + channel_grouped[i].key
-    }
-    console.log("top 10 channel by views = ", top_channel)
-
     var logo_trophee = d3.select('#Leaderboard')
-        .append('svg')
-        .attr("width", 35)
-        .attr("height", 35)
-        .selectAll("image")
-        .data([0])
-        .enter()
-        .append("svg:image")
-        .attr('x', 5)
-        .attr('y', 5)
-        .attr('width', 30)
-        .attr('height', 30)
-        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
+    .append('svg')
+    .attr("width", 35)
+    .attr("height", 35)
+    .selectAll("image")
+    .data([0])
+    .enter()
+    .append("svg:image")
+    .attr('x', 5)
+    .attr('y', 5)
+    .attr('width', 30)
+    .attr('height', 30)
+    .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
 
-    // create table
-    var table = d3.select("#Leaderboard")
-        .append("center")
-        .append('table')
-        .style("border-collapse", "collapse")
-        .style("border", "2px black solid")
-        .style("text-anchor", "middle")
-        .attr("x", "5")
-        .attr("y", "5")
-        .attr("width", "200")
-        .attr("height", "100")
+     // create table
+     var table = d3.select("#Leaderboard")
+     .append("center")
+     .append('table')
+     .style("border-collapse", "collapse")
+     .style("border", "2px black solid")
+     .style("text-anchor", "middle")
+     .attr("x", "5")
+     .attr("y", "5")
+     .attr("width", "200")
+     .attr("height", "100")
 
-    var thead = table.append('thead')
-    var tbody = table.append('tbody')
+
+ 
+    var thead = table.append('thead');
+    var tbody = table.append('tbody');
+    leaderboard.tbody = tbody;
 
     // headers
     var title = ["LEADERBOARD"]
@@ -547,65 +540,67 @@ function draw_leaderboard() {
         .selectAll('th')
         .data(title)
         .enter()
-        .append('th')
-        .text(function (d) { return d; })
-        .style("border", "1px black solid")
-        .style("padding", "5px")
-        .style("background-color", "lightgray")
-        .style("font-weight", "bold")
-        .style("text-transform", "uppercase")
+            .append('th')
+                .text(function (d) { return d; })
+                .style("border", "1px black solid")
+                .style("padding", "5px")
+                .style("background-color", "lightgray")
+                .style("font-weight", "bold")
+                .style("text-transform", "uppercase")
 
+}
+
+function draw_leaderboard() {
+
+    console.log("==== LEADERBOARD ====")
+
+    // group videos by channel
+    let sort_attribute = leaderboard.group_variable;
+    let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+
+    var channel_map = d3.rollup(
+        filtered_dataset,
+        v => d3.sum(v, d=> d[sort_attribute]),
+        d => d.channel_title);
+    channel_grouped = Array.from(channel_map.keys(),
+        function(k){return{key:k, value:channel_map.get(k)}})
+    //console.log("channel_grouped = ", channel_grouped)
+
+    // sort channel by views 
+    //console.log("before sort = ", channel_grouped[0])
+    channel_grouped.sort(function(x, y){ return d3.descending(x.value, y.value)})
+    //console.log("top 10 channel by "+sort_attribute+" = ", top_channel)
+ 
+    var top_channel = []
+    for (i=0;i<20 && i<channel_grouped.length;i++) { 
+        top_channel[i] = (i+1) + ". " + channel_grouped[i].key
+    }
+    console.log("top 10 channel by "+sort_attribute+" = ", top_channel)
+
+    tbody = leaderboard.tbody;
+
+    // update on table is hard to figure out... delete and use d3.selection.enter
+    tbody.selectAll('tr').data([]).exit().remove();
     // data
     var rows = tbody.selectAll('tr')
         .data(top_channel)
         .enter()
-        .append('tr')
+            .append('tr');
 
     var columns = ["key"]
     var cells = rows.selectAll('td')
         .data(function (row) { return columns.map(function (column) { return { value: row } }) })
         .enter()
-        .append('td')
-        .text(function (d) { return d.value })
-        .style("border", "1px black solid")
-        .style("padding", "5px")
-        .on("mouseover", function () { d3.select(this).style("background-color", "powderblue") })
-        .on("mouseout", function () { d3.select(this).style("background-color", "white") })
-        .style("font-size", "12px")
-        .style("text-anchor", "middle")  
+            .append('td')
+                .text(function (d) { return d.value })
+                .style("border", "1px black solid")
+                .style("padding", "5px")
+                .style("font-size", "12px")
+                .style("text-anchor", "middle")  
+            .on("mouseover", function () { d3.select(this).style("background-color", "powderblue") })
+            .on("mouseout", function () { d3.select(this).style("background-color", "white") })
     
-
-    // A function that update the Table
-    function update(selected_filter) {
-        console.log("___ update leaderboard ___")
-
-        // filter data
-        var data_filtered = d3.nest()
-            .key(function(d){ return d.channel_title })
-            .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d[selected_filter]})})
-            .entries(dataset.filter(filter_by_time))//tbody.data())
-        // sort channel
-        data_filtered.sort(function(x, y){ return d3.descending(x.value, y.value)})
-        var top_channel = []
-        for (i=0;i<20;i++) { 
-            top_channel[i] = (i+1) + ". " + data_filtered[i].key
-        }
-        console.log("new top = ", top_channel)
-        // Give these new data to update table
-        tbody.data(top_channel).enter()
-    }    
-
-    // When the button is changed, run the updateChart function
-    d3.select("#selectButton").on("change", function(d) {
-        var selected_filter = d3.select(this).property("value") // recover the option that has been chosen
-        update(selected_filter) // run the updateChart function with this selected option
-    })
-
-
     console.log("=================")
-
-    return table
-
 }
 
 /************************************************************
@@ -688,9 +683,6 @@ function init_trend_heatmap() {
         .call(d3.axisBottom(trend.xscale));
 
     // Build Y scales and axis:
-    console.log("unique_categories")
-    console.log(unique_categories)
-    //trend.cat_scale.domain(unique_categories).range(ii_categories)
     trend.yscale
         .range([trend.height, 0])
         .domain(unique_categories)
@@ -805,10 +797,11 @@ function draw_trend_heatmap() {
     
     // Build color scale (range spans selected categories only)
     metric_extent = d3.extent(
-        flat_metrics.filter(is_cat_selected),
+        flat_metrics.filter(filter_by_category),
         d=>d[metric]);
-    var trendColors = d3.scaleSequential(d3.interpolateYlGnBu)
-    .domain([0 , metric_extent[1]]);//d3.max(flat_metrics,d=>d[metric])]);
+    var trendColors =
+        d3.scaleSequential(d3.interpolateYlGnBu)
+            .domain([0 , metric_extent[1]]);
     
     // Draw the heatmap 
     function keyfcn(d){return d.category+'|'+d.trend_duration;}
@@ -829,14 +822,14 @@ function draw_trend_heatmap() {
             .attr("width", trend.xscale.bandwidth() )
             .attr("height", trend.yscale.bandwidth() )
             .style("fill", function(d) { return trendColors(d[metric])} )
-            .style("fill-opacity", d=>is_cat_selected(d)?1:.2 )
-            .style("stroke-opacity", d=>is_cat_selected(d)?.5:0 )
+            .style("fill-opacity", d=>filter_by_category(d)?1:.2 )
+            .style("stroke-opacity", d=>filter_by_category(d)?.5:0 )
         .on("mouseover", trend.mouseover)
         .on("mousemove", d => trend.mousemove(d))
         .on("mouseleave", trend.mouseleave);
     boxes.style("fill", function(d) { return trendColors(d[metric])} )
-        .style("fill-opacity", d=>is_cat_selected(d)?1:.2 )
-        .style("stroke-opacity", d=>is_cat_selected(d)?.5:0 )
+        .style("fill-opacity", d=>filter_by_category(d)?1:.2 )
+        .style("stroke-opacity", d=>filter_by_category(d)?.5:0 )
 
 }
 
@@ -855,7 +848,7 @@ function draw_trend_heatmap() {
 
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
-SLIDER_RATE_LIMIT_MS = 0 //no limit
+SLIDER_RATE_LIMIT_MS = 100 //no limit
 SLIDE_MAX = 1000
 date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
 
@@ -880,11 +873,22 @@ slider.onChange(function (newRange) {
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
     const now = +new Date();
-    if (now - last_slider_change > SLIDER_RATE_LIMIT_MS) { // 50Hz seconds
+    if (now - last_slider_change >= SLIDER_RATE_LIMIT_MS) { // 50Hz seconds
         last_slider_change = now;
+            t0 = performance.now()
         draw_time_graph();
+        t1 = performance.now()
         draw_trend_heatmap();
+        t2 = performance.now()
         draw_cat_analysis();
+        t3 = performance.now()
+        if (leaderboard.tbody) {draw_leaderboard()};
+        t4 = performance.now()
+        console.log("Call to draw_time_graph took " + (t1 - t0) + " milliseconds.")
+        console.log("Call to draw_trend_heatmap took " + (t2 - t1) + " milliseconds.")
+        console.log("Call to draw_cat_analysis took " + (t3 - t2) + " milliseconds.")
+        console.log("Call to draw_leaderboard took " + (t4 - t3) + " milliseconds.")
+     
     }
 });
 
@@ -895,7 +899,7 @@ slider.onChange(function (newRange) {
 * These are generic functions used in all sections to filter data
 ************************************************************/
 
-function is_cat_selected(d){
+function filter_by_category(d){
     // Return true if this entry in in one of the selected categories
     // Caveat: if no category is selected, keep all
     return (selected_categories.size==0) ? true : selected_categories.has(d.category);
