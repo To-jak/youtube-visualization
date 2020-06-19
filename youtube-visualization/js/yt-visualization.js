@@ -340,6 +340,8 @@ function draw_leaderboard() {
     // Add dropdown button menu
     var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
     var my_dropdown_menu = d3.select("#selectButton")
+        .attr('x', 200)
+        .attr('y', 50)
         .selectAll('myOptions')
         .data(leaderboard_filter)
         .enter()
