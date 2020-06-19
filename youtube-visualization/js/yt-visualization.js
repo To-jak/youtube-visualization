@@ -337,21 +337,31 @@ function draw_leaderboard() {
     var width  = document.getElementById("Leaderboard").clientWidth
     console.log("size = "+ height+" x "+ width)
 
+    // Add dropdown button menu
+    var leaderboard_filter = ["by views", "by likes", "by comment", "by dislikes"]
+    d3.select("#selectButton")
+        .selectAll('myOptions')
+        .data(leaderboard_filter)
+        .enter()
+        .append('option')
+        .text(function (d) { return d; }) // text showed in the menu
+        .attr("value", function (d) { return d; }) // corresponding value returned by the button
+
     // group videos by channel
-    views_by_channel = d3.nest()
+    channel_grouped = d3.nest()
         .key(function(d){ return d.channel_title })
         .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
         .entries(dataset.filter(filter_by_time))
 
-    console.log("views_by_channel = ", views_by_channel)
+    console.log("channel_grouped = ", channel_grouped)
 
     // sort channel by views 
-    console.log("before sort = ", views_by_channel[0])
-    views_by_channel.sort(function(x, y){ return d3.descending(x.value, y.value)})
-    console.log("after sort  = ", views_by_channel[0])
+    console.log("before sort = ", channel_grouped[0])
+    channel_grouped.sort(function(x, y){ return d3.descending(x.value, y.value)})
+    console.log("after sort  = ", channel_grouped[0])
     var top_channel = []
     for (i=0;i<20;i++) { 
-        top_channel[i] = (i+1) + ". " + views_by_channel[i].key
+        top_channel[i] = (i+1) + ". " + channel_grouped[i].key
     }
     console.log("top 10 channel by views = ", top_channel)
 
