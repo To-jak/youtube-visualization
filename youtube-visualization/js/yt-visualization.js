@@ -1,5 +1,5 @@
 // Utils /////////////////////////////////////////////////
-var parseDate = d3.timeParse("%Y.%d.%m");
+var parseDate = d3.timeParse("%Y-%m-%d");
 var parseTime = d3.timeParse("%H:%M:%S")
 
 var category_id_to_name = {
@@ -44,14 +44,14 @@ function onlyUnique(value, index, self) {
 }
 d3.csv('data/clean_data.csv')
     .row((d, i) => {
-        function parseTags(tags) {
+        function parseTags(tags){
+            // remove leading "[' trailing']" and split
             out = []
             if (tags) out = tags.slice(2, -2).split("', '").filter(onlyUnique);
             return out
         }
-        // remove leading "[' trailing']" and split
         return {
-            category: d.category,
+            category: d.category?d.category:"", // map undefined to ""
             category_id: +d.category_id,
             channel_title: d.channel_title,
             comment_count: +d.comment_count,
@@ -81,6 +81,7 @@ d3.csv('data/clean_data.csv')
 
         dataset = rows;
         init_timeline_range();
+        init_trend_heatmap();
 
         draw_cat_analysis();
         draw_trend_heatmap();
@@ -303,36 +304,185 @@ function draw_leaderboard() {
 }
 
 // Tag Trends /////////////////////////////////////////////////
-function draw_trend_heatmap() { }
 /*
-// TODO REPLACE BY ACTUAL FILTER ON CATEGORIES
-function draw_trend_heatmap(){
-    let height = document.getElementById("TagTrends").clientHeight
-    let width = document.getElementById("TagTrends").clientWidth
-    let margin_left = 20;
-    let margin_top = 20;
-    let svg_svg_trend = d3.select("#Leaderboard")
-        .append("svg")
-        .attr("width",width)
-        .attr("height",height)
-        .append("g")
-        .attr("transform",
-        "translate(" + h_margin + "," + v_margin + ")");
+This is the code for the heatmap on the top left of the screen
+Main functions:
+init_trend_heatmap() called once to initialize some values from dataset
+draw_trend_heatmap() called to update the drawing according to selection
+*/
+
+//temporary placeholders
+// function init_trend_heatmap() { } 
+// function draw_trend_heatmap() { }
+
+var trend = {
+    height: document.getElementById("TagTrends").clientHeight,
+    width: document.getElementById("TagTrends").clientWidth,
+    margins: {top:8, bottom:18, left:120, right:8}};
+trend.in_height = trend.height - trend.margins.top - trend.margins.bottom;
+trend.in_width =  trend.height - trend.margins.left - trend.margins.right;
+
+let svg_trend = d3.select("#TagTrends")
+    .append("svg")
+    .attr("width",trend.width)
+    .attr("height",trend.height)
+    .append("g")
+    .attr("transform",
+    "translate(" + trend.margins.left + "," + trend.margins.top + ")");    
+
+// Init function called once to initialize some values
+var unique_categories = [];
+var max_duration = -1;
+
+trend.xscale = d3.scaleBand();
+trend.yscale = d3.scaleBand();
+//trend.cat_scale = d3.scaleOrdinal();
+
+function init_trend_heatmap(){
+    // largest trending duration (for scale)
+    max_duration = d3.max(
+        dataset,
+        d=>d.trend_duration
+    );
+    duration_range = [...Array(max_duration).keys()].map(i => i+1)
+    unique_categories = Array.from(new Set(
+        Array.from(dataset,d=>d.category)
+    ));
+    ii_categories = [...Array(unique_categories.length).keys()]
+
 
     // Build X scales and axis:
-    d3.select("#road").selectAll("option")
-    .data(d3.map(data, function(d){return d.roadname;}).keys())
-    .enter()
+    trend.xscale
+        .range([ 0, trend.in_width ])
+        .domain(duration_range)
+        .padding(0.05);
+    svg_trend.append("g")
+        .attr("transform", "translate(0," + trend.in_height + ")")
+        .call(d3.axisBottom(trend.xscale));
 
-    var y = d3.scaleBand()
-        .range([ height-2*v_margin, 0 ])
-        .domain(myVars)
-        .padding(0.01);
-    svg.append("g")
-    .   call(d3.axisLeft(y));
+    // Build Y scales and axis:
+    console.log("unique_categories")
+    console.log(unique_categories)
+    //trend.cat_scale.domain(unique_categories).range(ii_categories)
+    trend.yscale
+        .range([trend.in_height, 0])
+        .domain(unique_categories)
+        .padding(0.05);
+    svg_trend.append("g")
+        .call(d3.axisLeft(trend.yscale));
 
 }
-*/
+
+// create a tooltip
+trend.tooltip = d3.select(".grid-container")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "2px")
+    .style("border-radius", "5px")
+    .style("padding", "5px")
+    .style("z-index",9)
+
+
+// Three function that change the tooltip when user hover / move / leave a cell
+trend.mouseover = function(d) {
+        trend.tooltip.style("opacity", 1)
+    }
+trend.mousemove = function(d, key) {
+        let mouse = d3.mouse(d3.event.currentTarget); 
+        trend.tooltip
+        .style("left", (mouse[0]+70) + "px")
+        .style("top", (mouse[1]) + "px")
+        .html(d.category+"<br>"+
+            "Trending for "+d.trend_duration+"days<br>"+
+            key+" is "+d[key])
+
+    }
+trend.mouseleave = function(d) {
+        trend.tooltip.style("opacity", 0)
+    }
+
+function draw_trend_heatmap(){
+
+    // Reduction on the dataset
+    // Define some functions to access metrics of interest
+    function countFcn(v) {return v.length};
+    function cumulViews(v) {return d3.sum(v,d=>d.views)};
+    function cumulLikes(v) {return d3.sum(v,d=>d.likes)};
+    function cumulDislikes(v) {return d3.sum(v,d=>d.dislikes)};
+    function avgViews(v) {return d3.mean(v,d=>d.views)};
+    function avgLikes(v) {return d3.mean(v,d=>d.likes)};
+    function avgDislikes(v) {return d3.mean(v,d=>d.dislikes)};
+    function allStats(v){
+        stats={count: countFcn(v),
+              total_views: cumulViews(v),
+              total_likes: cumulLikes(v),
+              total_dislikes: cumulDislikes(v),
+              avg_views: avgViews(v),
+              avg_likes: avgLikes(v),
+              avg_dislikes: avgDislikes(v)
+             };
+        return stats;
+    }
+
+    // Make a 2 level nested list with those metrics
+    var trendMetrics = d3.rollup(
+        dataset.filter(filter_by_time),
+        allStats,
+        d => d.category,
+        d => d.trend_duration);
+    
+    // Make it a flat array
+    // This may be ugly but hey, this is my second time with JavaScript...
+    function custom_reduction(map, category_name){
+        arr = Array.from(
+            map.keys(),
+            k=> {obj={category:category_name, trend_duration:k , ...map.get(k)}; return obj}
+            )
+        return arr
+    }
+    let flat_metrics = Array.from(
+            trendMetrics.keys(),
+            k=> custom_reduction(trendMetrics.get(k),k)
+        );
+    flat_metrics = [].concat.apply([], flat_metrics);    
+
+    // Now, to the map!
+    metric="count"
+    
+    // Build color scale
+    var myColor = d3.scaleSequential(d3.interpolateYlGnBu)
+    .domain([0 , 1000]);//d3.max(flat_metrics,d=>d[metric])]);
+    
+
+
+    console.log(flat_metrics)
+    console.log(trend.xscale.bandwidth() )
+    console.log(trend.yscale.bandwidth() )
+    //Heatmap
+    boxes = svg_trend.selectAll()
+        .data(flat_metrics, function(d) {return d.category+'|'+d.trend_duration;});
+    
+    boxes.style("fill", function(d) { return myColor(d[metric])} );
+    boxes.enter()
+        .append("rect")
+        .attr("x", function(d) {
+            return trend.xscale(d.trend_duration)
+            })
+        .attr("y", function(d) {
+            return trend.yscale(d.category)
+            })
+        .attr("width", trend.xscale.bandwidth() )
+        .attr("height", trend.yscale.bandwidth() )
+        .style("fill", function(d) { return myColor(d[metric])} );/*
+        .on("mouseover", trend.mouseover)
+        .on("mousemove", d=> trend.mousemove(d,metric))
+        .on("mouseleave", trend.mouseleave);*/
+    boxes.exit().remove;
+}
+
 
 // Word Cloud /////////////////////////////////////////////////
 
@@ -342,36 +492,30 @@ function draw_trend_heatmap(){
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
 SLIDE_MAX = 1000
-time_scale = d3.scaleTime().range([0, SLIDE_MAX]);
-var time_range = [0, 0];
+date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
+var date_range = [0,0];
 date_formatter = d3.timeFormat("%x");// %x is locale format for dates
 
 function filter_by_time(d) {
     // Filter data entries with .filter(filter_by_time)
-    let c1 = d.publish_time >= time_scale(time_range[0]);
-    let c2 = d.publish_time <= time_scale(time_range[1]);
-    return c1 && c2
+    let c1 = d.publish_date >= date_range[0];
+    let c2 = d.publish_date <= date_range[1];
+    return  c1 && c2
 }
 
 function init_timeline_range() {
     // Call upon loading the dataset to set the scale range
-    tmp = d3.extent(dataset, d => d.publish_time);
-    console.log(tmp);
-    time_scale.domain(d3.extent(dataset, d => d.publish_time));
-    slider.range(0, SLIDE_MAX);
-
-
+    date_scale.domain(d3.extent(dataset, d => d.publish_date));
+    slider.range(0,SLIDE_MAX);
 }
 
 var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
 
-slider.onChange(function (newRange) {
-    time_range = [time_scale.invert(newRange.begin), time_scale.invert(newRange.end)];
-
+slider.onChange(function(newRange){
+    date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
 
     d3.select("#range-label")
-        .html(date_formatter(time_range[0]) + " &mdash; " + date_formatter(time_range[1]));
+        .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
-    //update_all();
-
+    draw_trend_heatmap();
 });
