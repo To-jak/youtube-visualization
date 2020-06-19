@@ -221,7 +221,7 @@ function draw_leaderboard() {
     // Get height and width of the HTML container
     var height = document.getElementById("Leaderboard").clientHeight
     var width  = document.getElementById("Leaderboard").clientWidth
-    console.log("size = "+ height+" x "+ width)
+    console.log("size = "+ height +" x "+ width)
 
     // group videos by channel
     views_by_channel = d3.nest()
@@ -262,9 +262,13 @@ function draw_leaderboard() {
     var table = svg_table.select("body")
         .append('table')
         .style("border-collapse", "collapse")
-        .style("border", "2px black solid")      
-        .attr("x", "200")
-        .attr("y", "200")
+        .style("border", "2px black solid")
+        .style("text-anchor", "middle")    
+        .attr("x", "5")
+        .attr("y", "5")
+        .attr("width", "275")
+        .attr("height", "100")
+         
 	var thead = table.append('thead')
 	var tbody = table.append('tbody')
 
