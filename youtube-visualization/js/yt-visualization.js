@@ -369,12 +369,12 @@ function draw_cat_analysis() {
         .on("mousemove", function (d) {
             cat_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>"
                 + "<div class=\"tooltip-content\">"
-                + "Videos: " + d.value['nb_videos'] + "<br/>"
-                + "Views: " + d.value['total_views'] + "<br/>"
-                + "<i class=\"fa fa-thumbs-up\" aria-hidden=\"true\"></i>" + d.value['total_likes'] + "<br/>"
-                + "<i class=\"fa fa-thumbs-down\" aria-hidden=\"true\"></i>" + d.value['total_dislikes'] + "<br/></div>")
-                .style("left", (d3.event.pageX) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
+                + "Videos: <b>" + d.value['nb_videos'].toLocaleString() + "</b><br/>"
+                + "Views: <b>" + d.value['total_views'].toLocaleString() + "</b><br/>"
+                + "<i class=\"fa fa-thumbs-up\" aria-hidden=\"true\"></i> <b>" + d.value['total_likes'].toLocaleString() + "</b><br/>"
+                + "<i class=\"fa fa-thumbs-down\" aria-hidden=\"true\"></i> <b>" + d.value['total_dislikes'].toLocaleString() + "</b><br/></div>")
+                .style("left", (d3.event.pageX) + 20 + "px")
+                .style("top", (d3.event.pageY - 30) + "px");
         })
         .on("mouseout", function (d) {
             cat_tooltip.transition()
@@ -399,7 +399,7 @@ function draw_cat_analysis() {
                 d3.select(this).classed("selected", false);
                 console.log(selected_categories)
             }
-            
+
             draw_trend_heatmap();
             draw_time_graph();
         });
