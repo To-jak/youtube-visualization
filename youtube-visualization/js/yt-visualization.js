@@ -288,6 +288,7 @@ let catAnalysisSVG = d3.select("#CategoryAnalysis")
     .attr("height", catAnalysis.height)
     .append("g")
     .attr("transform", "translate(" + catAnalysis.width / 2 + "," + catAnalysis.height / 2 + ")")
+var defs = catAnalysisSVG.append('defs');
 
 let selected_categories = new Set();
 
@@ -295,6 +296,56 @@ let selected_categories = new Set();
 var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 120])
 var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
 var likeRatioColor = d3.scaleSequential(d3.interpolateYlGn).domain([0, 30])
+
+// LINEAR GRADIENT for legend
+var linearGradient = defs.append("linearGradient")
+    .attr("id", "linear-gradient")
+    //Horizontal gradient
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "100%")
+    .attr("y2", "0%");
+
+//Set the color for the start (0%)
+linearGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", likeRatioColor(0));
+
+//Set the color for the end (100%)
+linearGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", likeRatioColor(30));
+
+catAnalysisSVG.append("rect")
+.attr("x", -catAnalysis.width/3)
+.attr("y", (-catAnalysis.height/2 + 5))
+.attr("width", 100)
+.attr("height", 10)
+.style("fill", "url(#linear-gradient)");
+
+catAnalysisSVG.append("text")
+.attr("class", "legend")
+.attr("x", -catAnalysis.width/3)
+.attr("y", (-catAnalysis.height/2 + 30))
+.style("font-size", "12px")
+.style("font-family", "Arial, Helvetica, sans-serif")
+.text("Likes Ratio");
+
+catAnalysisSVG.append("text")
+.attr("class", "legend")
+.attr("x", -catAnalysis.width/3 - 12)
+.attr("y", (-catAnalysis.height/2 + 15))
+.style("font-size", "12px")
+.style("font-family", "Arial, Helvetica, sans-serif")
+.text("0");
+
+catAnalysisSVG.append("text")
+.attr("class", "legend")
+.attr("x", -catAnalysis.width/3 + 102)
+.attr("y", (-catAnalysis.height/2 + 15))
+.style("font-size", "12px")
+.style("font-family", "Arial, Helvetica, sans-serif")
+.text("30+");
 
 // Force simulation
 var simulation = d3.forceSimulation()
@@ -460,7 +511,7 @@ function resize_categories() {
             return temp_radiusScale(d.value['nb_videos'])
         })
 
-    catAnalysisSVG.selectAll("text")
+    catAnalysisSVG.selectAll("category-circle-text")
     .transition()
         .attr('font-size', function (d) {
             return temp_textScale(d.value['nb_videos'])
