@@ -165,5 +165,7 @@ g.not-selected {
 .leaderboard-area {
     position: relative;
     grid-area: leaderboard-area;
-    overflow-y: scroll
+    overflow-y: scroll;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
 }

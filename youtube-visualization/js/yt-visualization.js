@@ -365,6 +365,7 @@ function draw_leaderboard() {
     
     // create table
     var table =  d3.select("#Leaderboard")
+        .append("center")
         .append('table')
         .style("border-collapse", "collapse")
         .style("border", "2px black solid")
@@ -404,10 +405,10 @@ function draw_leaderboard() {
         .text(function (d) { return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
-        .style("text-anchor", "middle")
         .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
         .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
         .style("font-size", "12px")
+        .style("text-anchor", "middle")  
     
     console.log("=================")
 
