@@ -155,6 +155,15 @@ timeGraph_svg.append("g")
     .classed("y-timegraph", true)
     .call(d3.axisLeft(y));
 
+timeGraph_svg.append("text")
+    .style("text-anchor", "middle")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -timeGraph.height / 2)
+    .attr("y", "-15%")
+    .style("font-size", "13px")
+    .style("font-family", "Arial, Helvetica, sans-serif")
+    .text("number of videos")
+
 function calcDate(date1,date2) {
     var diff = Math.floor(date1.getTime() - date2.getTime());
     var day = 1000 * 60 * 60 * 24;
