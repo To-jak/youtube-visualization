@@ -92,7 +92,8 @@ html, body {
 .category-timegraph-area {
     position: relative;
     grid-area: category-timegraph-area;
-    background-color: blueviolet;
+    outline: 1px solid black;
+    outline-offset: -1px;
 }
 
 /****** CATEGORY ANALYSIS ******/
