@@ -511,7 +511,7 @@ function resize_categories() {
             return temp_radiusScale(d.value['nb_videos'])
         })
 
-    catAnalysisSVG.selectAll("category-circle-text")
+    catAnalysisSVG.selectAll(".category-circle-text")
     .transition()
         .attr('font-size', function (d) {
             return temp_textScale(d.value['nb_videos'])
