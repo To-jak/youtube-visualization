@@ -292,8 +292,10 @@ function draw_cat_analysis() {
         .classed("selected", false)
         .on("mouseover", function (d) {
             cat_tooltip.transition()
-                .duration(200)
+                .duration(100)
                 .style("opacity", .9);
+        })
+        .on("mousemove", function (d) {
             cat_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>"
                 + "<div class=\"tooltip-content\">"
                 + "Videos: " + d.value['nb_videos'] + "<br/>"
@@ -305,7 +307,7 @@ function draw_cat_analysis() {
         })
         .on("mouseout", function (d) {
             cat_tooltip.transition()
-                .duration(500)
+                .duration(200)
                 .style("opacity", 0);
         })
         .on("click", function (d) {
