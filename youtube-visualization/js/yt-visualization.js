@@ -293,8 +293,9 @@ let catAnalysisSVG = d3.select("#CategoryAnalysis")
 let selected_categories = new Set();
 
 // Scales
-var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
+var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 120])
 var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
+var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, 20])
 
 // Force simulation
 var simulation = d3.forceSimulation()
@@ -320,9 +321,13 @@ function filter_by_category(d) {
     }
 }
 
+let cat_data
+
 function draw_cat_analysis() {
 
-    var cat_data = d3.nest()
+    simulation.stop()
+
+    cat_data = d3.nest()
         .key(function (d) { return d.category; })
         .rollup(function (leaves) {
             category_summary = {
@@ -338,10 +343,13 @@ function draw_cat_analysis() {
         })
         .entries(dataset.filter(filter_by_time));
 
-    console.log(cat_data)
+    // Apply classic force after a potential resize
+    simulation.nodes(cat_data)
+    .force("collide", d3.forceCollide(function (d) {
+        return radiusScale(d.value['nb_videos']) + 10
+    }))
 
     var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
-    var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, maxRatio])
 
     var data_bond = catAnalysisSVG.selectAll("g").data(cat_data, d => d.key)
 
@@ -361,7 +369,12 @@ function draw_cat_analysis() {
         })
 
     var new_circles_g = data_bond.enter().append("g").attr("transform", "translate(0,0)")
-        .classed("selected", false)
+        .classed("selected", function(d){
+            return selected_categories.has(d.category)
+        })
+        .classed("not-selected", function(d){
+            return selected_categories.size != 0 && !selected_categories.has(d.category)
+        })
         .on("mouseover", function (d) {
             cat_tooltip.transition()
                 .duration(100)
@@ -430,7 +443,32 @@ function draw_cat_analysis() {
         });
 
     simulation.nodes(cat_data)
-        .alphaTarget(0.2);
+        .alpha(0.2).restart();
+}
+
+function resize_categories() {
+
+    var current_max_size = d3.max(cat_data, d => d.value['nb_videos'])
+
+    var temp_radiusScale = d3.scaleSqrt().domain([1, current_max_size]).range([10, 120])
+    var temp_textScale = d3.scaleSqrt().domain([1, current_max_size]).range([5, 30])
+
+    catAnalysisSVG.selectAll("circle")
+        .transition()
+        .attr("r", function (d) {
+            return temp_radiusScale(d.value['nb_videos'])
+        })
+
+    catAnalysisSVG.selectAll("text")
+    .transition()
+        .attr('font-size', function (d) {
+            return temp_textScale(d.value['nb_videos'])
+        })
+
+    simulation.nodes(cat_data)
+    .force("collide", d3.forceCollide(function (d) {
+        return temp_radiusScale(d.value['nb_videos']) + 10
+    })).alpha(0.2).restart()
 }
 
 // Leaderboard /////////////////////////////////////////////////

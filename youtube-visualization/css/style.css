@@ -149,6 +149,10 @@ g.not-selected {
     z-index: 10;
 }
 
+#resize-button{
+    position: absolute;
+}
+
 /****** TAG TRENDS ******/
 
 .tag-trends-area {
