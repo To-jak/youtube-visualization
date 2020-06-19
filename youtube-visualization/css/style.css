@@ -35,7 +35,7 @@ html, body {
 .timeline-area {
     position: relative;
     grid-area: timeline-area;
-    background-color: aquamarine;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #range-label {
@@ -153,6 +153,10 @@ g.not-selected {
     grid-area: tag-trends-area;
 }
 
+.dropdown{
+    width: 120px;
+    float:right;
+}
 /****** WORDCLOUD ******/
 
 .wordcloud-area {
