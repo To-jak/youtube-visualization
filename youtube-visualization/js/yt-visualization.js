@@ -93,12 +93,13 @@ d3.csv('data/clean_data.csv')
 // Category Analysis /////////////////////////////////////////////////
 
 var selected_categories = new Set();;
-function draw_cat_analysis() {
 
-    // Define the div element for the tooltip
-    var cat_tooltip = d3.select("body").append("div")
-        .attr("class", "cat-tooltip")
-        .style("opacity", 0);
+// Define the div element for the tooltip
+var cat_tooltip = d3.select("body").append("div")
+    .attr("class", "cat-tooltip")
+    .style("opacity", 0);
+
+function draw_cat_analysis() {
 
     // Get height and width of the HTML container
     var height = document.getElementById("CategoryAnalysis").clientHeight
@@ -374,7 +375,7 @@ function init_trend_heatmap(){
 }
 
 // create a tooltip
-trend.tooltip = d3.select(".grid-container")
+trend.tooltip = d3.select("body")
     .append("div")
     .style("opacity", 0)
     .attr("class", "tooltip")
@@ -383,25 +384,27 @@ trend.tooltip = d3.select(".grid-container")
     .style("border-width", "2px")
     .style("border-radius", "5px")
     .style("padding", "5px")
-    .style("z-index",9)
 
 
 // Three function that change the tooltip when user hover / move / leave a cell
 trend.mouseover = function(d) {
-        trend.tooltip.style("opacity", 1)
+        cat_tooltip.style("opacity", .9)
     }
-trend.mousemove = function(d, key) {
-        let mouse = d3.mouse(d3.event.currentTarget); 
-        trend.tooltip
-        .style("left", (mouse[0]+70) + "px")
-        .style("top", (mouse[1]) + "px")
-        .html(d.category+"<br>"+
-            "Trending for "+d.trend_duration+"days<br>"+
-            key+" is "+d[key])
-
+trend.mousemove = function(d) {
+    let mouse = d3.mouse(d3.event.currentTarget); 
+    cat_tooltip
+        .html(
+            "<div class=\"tooltip-header\">" + d.category + "</div>"+
+            "<div class=\"tooltip-content\">"+
+            "<b>" +  d.count + "</b> videos have been trending for <b>"+d.trend_duration+"</b> days<br>"+
+            "Total views : <b>"+ d.total_views+"</b><br>"+
+            "Total likes : <b>"+ d.total_likes+"</b><br>"+
+            "Total dislikes : <b>"+ d.total_dislikes+"</b>")
+        .style("left", (d3.event.pageX) + "px")
+        .style("top", (d3.event.pageY+70) + "px")
     }
 trend.mouseleave = function(d) {
-        trend.tooltip.style("opacity", 0)
+        cat_tooltip.style("opacity", 0)
     }
 
 function draw_trend_heatmap(){
@@ -476,10 +479,10 @@ function draw_trend_heatmap(){
             })
         .attr("width", trend.xscale.bandwidth() )
         .attr("height", trend.yscale.bandwidth() )
-        .style("fill", function(d) { return myColor(d[metric])} );/*
+        .style("fill", function(d) { return myColor(d[metric])} )
         .on("mouseover", trend.mouseover)
-        .on("mousemove", d=> trend.mousemove(d,metric))
-        .on("mouseleave", trend.mouseleave);*/
+        .on("mousemove", d=> trend.mousemove(d))
+        .on("mouseleave", trend.mouseleave);
     boxes.exit().remove;
 }
 
