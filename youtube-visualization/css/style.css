@@ -149,7 +149,6 @@ g.not-selected {
 .tag-trends-area {
     position: relative;
     grid-area: tag-trends-area;
-    background-color: burlywood;
 }
 
 /****** WORDCLOUD ******/
