@@ -406,21 +406,33 @@ function draw_leaderboard() {
     var width = document.getElementById("Leaderboard").clientWidth
     console.log("size = " + height + " x " + width)
 
+    // Add dropdown button menu
+    var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
+    var my_dropdown_menu = d3.select("#selectButton")
+        .attr('x', 200)
+        .attr('y', 50)
+        .selectAll('myOptions')
+        .data(leaderboard_filter)
+        .enter()
+        .append('option')
+        .text(function (d) { return d[0]; }) // text showed in the menu
+        .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
+
     // group videos by channel
-    views_by_channel = d3.nest()
-        .key(function (d) { return d.channel_title })
-        .rollup(function (video_by_channel) { return d3.sum(video_by_channel, function (d) { return d.views }) })
+    channel_grouped = d3.nest()
+        .key(function(d){ return d.channel_title })
+        .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
         .entries(dataset.filter(filter_by_time))
 
-    console.log("views_by_channel = ", views_by_channel)
+    console.log("channel_grouped = ", channel_grouped)
 
     // sort channel by views 
-    console.log("before sort = ", views_by_channel[0])
-    views_by_channel.sort(function (x, y) { return d3.descending(x.value, y.value) })
-    console.log("after sort  = ", views_by_channel[0])
+    console.log("before sort = ", channel_grouped[0])
+    channel_grouped.sort(function(x, y){ return d3.descending(x.value, y.value)})
+    console.log("after sort  = ", channel_grouped[0])
     var top_channel = []
-    for (i = 0; i < 20; i++) {
-        top_channel[i] = (i + 1) + ". " + views_by_channel[i].key
+    for (i=0;i<20;i++) { 
+        top_channel[i] = (i+1) + ". " + channel_grouped[i].key
     }
     console.log("top 10 channel by views = ", top_channel)
 
@@ -484,7 +496,35 @@ function draw_leaderboard() {
         .on("mouseover", function () { d3.select(this).style("background-color", "powderblue") })
         .on("mouseout", function () { d3.select(this).style("background-color", "white") })
         .style("font-size", "12px")
-        .style("text-anchor", "middle")
+        .style("text-anchor", "middle")  
+    
+
+    // A function that update the Table
+    function update(selected_filter) {
+        console.log("___ update leaderboard ___")
+
+        // filter data
+        var data_filtered = d3.nest()
+            .key(function(d){ return d.channel_title })
+            .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d[selected_filter]})})
+            .entries(dataset.filter(filter_by_time))//tbody.data())
+        // sort channel
+        data_filtered.sort(function(x, y){ return d3.descending(x.value, y.value)})
+        var top_channel = []
+        for (i=0;i<20;i++) { 
+            top_channel[i] = (i+1) + ". " + data_filtered[i].key
+        }
+        console.log("new top = ", top_channel)
+        // Give these new data to update table
+        tbody.data(top_channel).enter()
+    }    
+
+    // When the button is changed, run the updateChart function
+    d3.select("#selectButton").on("change", function(d) {
+        var selected_filter = d3.select(this).property("value") // recover the option that has been chosen
+        update(selected_filter) // run the updateChart function with this selected option
+    })
+
 
     console.log("=================")
 
