@@ -453,6 +453,7 @@ function draw_cat_analysis() {
                 console.log(selected_categories)
             } else {
                 selected_categories.delete(d.key)
+                d3.select(this).classed("not-selected", true)
                 if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", false)
                 }
