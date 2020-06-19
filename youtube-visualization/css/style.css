@@ -92,7 +92,9 @@ html, body {
 .category-timegraph-area {
     position: relative;
     grid-area: category-timegraph-area;
-    background-color: blueviolet;
+    outline: 1px solid black;
+    outline-offset: -1px;
+    overflow: hidden;
 }
 
 /****** CATEGORY ANALYSIS ******/
@@ -102,6 +104,7 @@ html, body {
     grid-area: category-analysis-area;
     outline: 1px solid black;
     outline-offset: -1px;
+    overflow: hidden;
 }
 
 g.selected > .category-circle {
@@ -148,7 +151,6 @@ g.not-selected {
 .tag-trends-area {
     position: relative;
     grid-area: tag-trends-area;
-    background-color: burlywood;
 }
 
 .dropdown{
@@ -161,6 +163,7 @@ g.not-selected {
     position: relative;
     grid-area: wordcloud-area;
     background-color: crimson;
+    overflow: hidden;
 }
 
 /****** LEADERBOARD ******/
@@ -168,6 +171,7 @@ g.not-selected {
 .leaderboard-area {
     position: relative;
     grid-area: leaderboard-area;
-    background-color: rgb(247, 250, 83);
-    overflow: scroll
+    overflow-y: scroll;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
 }

@@ -96,29 +96,148 @@ d3.csv('data/clean_data.csv')
         draw_cat_analysis();
         draw_trend_heatmap();
         draw_leaderboard();
+        draw_time_graph();
     });
 
 // Category Time Graph /////////////////////////////////////////////////
 
-// Category Analysis /////////////////////////////////////////////////
+function draw_time_graph() {
 
-var selected_categories = new Set();;
+    // Define the div element for the tooltip
+    var time_tooltip = d3.select("body").append("div")
+    .attr("class", "cat-tooltip")
+    .style("opacity", 0);
+    
+    // Get height and width of the HTML container
+    var svg_height = document.getElementById("CategoryTimeGraph").clientHeight
+    var svg_width = document.getElementById("CategoryTimeGraph").clientWidth
+
+    // set the dimensions and margins of the graph
+    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+        width = svg_width - margin.left - margin.right,
+        height = svg_height - margin.top - margin.bottom;
+
+    // append the svg object to the #CategroryTimeGraph div of the page
+    var svg = d3.select("#CategoryTimeGraph")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    // getting first and last date from the data
+    var firstDate = new Date(2017, 7, 1) //d3.min(dataset, function (d) { return d.publish_date })
+    var lastDate = d3.max(dataset, function (d) { return d.publish_date })
+
+    console.log(firstDate)
+    console.log(lastDate)
+
+    // Add X axis --> it is a date format
+    var x = d3.scaleTime()
+        .domain([firstDate, lastDate])
+        .range([0, width]).nice();
+
+    // histogram to bin the values along time
+    var histogram = d3.histogram()
+        .value(function (d) { return d.publish_date; })
+        .domain(x.domain())
+        .thresholds(x.ticks(d3.timeMonth));
+
+    // Grouping by categories
+    var cat_data = d3.nest()
+        .key(function (d) { return d.category; })
+        .entries(dataset)
+
+    // Applying histogram to each category
+    hist_dict = {}
+    max_count_along_categories = 0
+    cat_data.forEach(element => {
+        bins = histogram(element.values)
+        line = bins.map(element => ({ date: element.x0, nb_videos: element.length }))
+        max_count_category = d3.max(line, function (d) { return d.nb_videos })
+        if (max_count_category > max_count_along_categories) {
+            max_count_along_categories = max_count_category
+        }
+        hist_dict[element.key] = line
+    });
+
+    // Add X axis
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    // Add Y axis
+    var y = d3.scaleLinear()
+        .domain([0, max_count_along_categories])
+        .range([height, 0]).nice();
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    time_graph_data = d3.entries(hist_dict)
+
+    console.log(time_graph_data)
+
+    var timeLines = svg.selectAll(".timeline")
+        .data(time_graph_data)
+        .enter().append("g").attr("class", "timeline");
+
+    // D3 line applied to the values
+    var Line = d3.line().x(function (d) { return x(d.date) })
+        .y(function (d) { return y(d.nb_videos) })
+
+    // Add the line
+    timeLines.append("path")
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2)
+        .attr("d", function (d) {
+            return Line(d.value)
+        })
+        .on("mouseover", function (d) {
+            time_tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            time_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+            time_tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        })
+}
+
+// Category Analysis /////////////////////////////////////////////////
 
 // Define the div element for the tooltip
 var cat_tooltip = d3.select("body").append("div")
     .attr("class", "cat-tooltip")
     .style("opacity", 0);
 
+let catAnalysis = {
+    height: document.getElementById("CategoryAnalysis").clientHeight,
+    width: document.getElementById("CategoryAnalysis").clientWidth
+}
+
+let catAnalysisSVG = d3.select("#CategoryAnalysis")
+    .append("svg")
+    .attr("width", catAnalysis.width)
+    .attr("height", catAnalysis.height)
+    
+let selected_categories = new Set();
+
+// Scales
+var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
+var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
+
+// Force simulation
+var simulation = d3.forceSimulation()
+.force("x", d3.forceX(catAnalysis.width / 2).strength(0.05))
+.force("y", d3.forceY(catAnalysis.height / 2).strength(0.05))
+
 function draw_cat_analysis() {
-
-    // Get height and width of the HTML container
-    var height = document.getElementById("CategoryAnalysis").clientHeight
-    var width = document.getElementById("CategoryAnalysis").clientWidth
-
-    var catAnalysisSVG = d3.select("#CategoryAnalysis")
-        .append("svg")
-        .attr("viewBox", "0 0 " + width + " " + height)
-        .attr("transform", "translate(0, 0)")
 
     var cat_data = d3.nest()
         .key(function (d) { return d.category; })
@@ -136,15 +255,12 @@ function draw_cat_analysis() {
         })
         .entries(dataset);
 
-    // Scales
-    var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
-    var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
-
-    var maxRatio = d3.max(cat_data, function(d) { return d.value['like_ratio'];} );
+    var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
     var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, maxRatio])
 
-    var circles_g = catAnalysisSVG.selectAll("g")
-        .data(cat_data).enter().append("g").attr("transform", "translate(0,0)")
+    var data_bond = catAnalysisSVG.selectAll("g").data(cat_data)
+
+    var new_circles_g =  data_bond.enter().append("g").attr("transform", "translate(0,0)")
         .classed("selected", false)
         .on("mouseover", function (d) {
             cat_tooltip.transition()
@@ -164,35 +280,37 @@ function draw_cat_analysis() {
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", function(d){
-            if (!d3.select(this).classed("selected") ){
-                if(selected_categories.size == 0) {
+        .on("click", function (d) {
+            if (!d3.select(this).classed("selected")) {
+                if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", true)
                 }
-                selected_categories.add(d.key)    
+                selected_categories.add(d.key)
                 d3.select(this).classed("not-selected", false)
                 d3.select(this).classed("selected", true)
-               console.log(selected_categories)
-            }else{
+                d3.select(this.childNodes[0]).attr('fill-opacity', 1)
+                console.log(selected_categories)
+            } else {
                 selected_categories.delete(d.key)
-                if(selected_categories.size == 0) {
+                if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", false)
                 }
-               d3.select(this).classed("selected", false);
-               console.log(selected_categories)
-            }});
+                d3.select(this).classed("selected", false);
+                console.log(selected_categories)
+            }
+        });
 
     // Circles
-    circles_g.append("circle")
+    new_circles_g.append("circle")
         .attr("class", "category-circle")
         .attr("r", function (d) {
             return radiusScale(d.value['nb_videos'])
         })
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
             return likeRatioColor(d.value['like_ratio'])
         })
 
-    circles_g.append("text")
+    new_circles_g.append("text")
         .attr("class", "category-circle-text")
         .attr('text-anchor', 'middle')
         .attr("x", 0)
@@ -206,20 +324,16 @@ function draw_cat_analysis() {
             return d.key.split(' ')[0];
         });
 
-    // Force simulation
-    var simulation = d3.forceSimulation()
-        .force("x", d3.forceX(width / 2).strength(0.05))
-        .force("y", d3.forceY(height / 2).strength(0.05))
-        .force("collide", d3.forceCollide(function (d) {
-            return radiusScale(d.value['nb_videos']) + 10
-        }))
-
     simulation.nodes(cat_data)
-        .on('tick', ticked)
+    .force("collide", d3.forceCollide(function (d) {
+        return radiusScale(d.value['nb_videos']) + 10
+    }))
+    .on('tick', ticked)
 
     function ticked() {
-        circles_g.attr("x", function (d) { return d.x })
-            .attr("transform", function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; })
+        catAnalysisSVG.selectAll("g")
+        .attr("x", function (d) { return d.x })
+        .attr("transform", function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; })
     }
 }
 
@@ -237,7 +351,7 @@ function draw_leaderboard() {
     views_by_channel = d3.nest()
         .key(function(d){ return d.channel_title })
         .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
-        .entries(dataset)
+        .entries(dataset.filter(filter_by_time))
 
     console.log("views_by_channel = ", views_by_channel)
 
@@ -246,50 +360,47 @@ function draw_leaderboard() {
     views_by_channel.sort(function(x, y){ return d3.descending(x.value, y.value)})
     console.log("after sort  = ", views_by_channel[0])
     var top_channel = []
-    for (i=0;i<10;i++) { 
-        top_channel[i] = views_by_channel[i].key
+    for (i=0;i<20;i++) { 
+        top_channel[i] = (i+1) + ". " + views_by_channel[i].key
     }
     console.log("top 10 channel by views = ", top_channel)
 
-    // create table
-    var svg_table = d3.select("#Leaderboard")
-        .append("svg")
-        .attr("viewBox", "0 0 " + width + " " + height)
-        .attr("transform", "translate(0, 0)")
-    
-    /*var logo_trophee = d3.select('#Leaderboard')
+    var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
+        .attr("width", 35)
+        .attr("height", 35)
         .selectAll("image")
         .data([0])
         .enter()
         .append("svg:image")
-        .attr('x', 10)
-        .attr('y', 10)
+        .attr('x', 5)
+        .attr('y', 5)
         .attr('width', 30)
         .attr('height', 30)
-        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")*/
-
-    var table = svg_table.select("body")
+        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
+    
+    // create table
+    var table =  d3.select("#Leaderboard")
+        .append("center")
         .append('table')
         .style("border-collapse", "collapse")
         .style("border", "2px black solid")
         .style("text-anchor", "middle")    
         .attr("x", "5")
         .attr("y", "5")
-        .attr("width", "275")
+        .attr("width", "200")
         .attr("height", "100")
          
 	var thead = table.append('thead')
 	var tbody = table.append('tbody')
 
-    var title = "LEADERBOARD"
-
     // headers
+    var title = ["LEADERBOARD"]
 	thead.append('tr')
         .selectAll('th')
-        .append('th')
         .data(title)
         .enter()
+        .append('th')
         .text(function(d) { return d; })
         .style("border", "1px black solid")
         .style("padding", "5px")
@@ -302,19 +413,23 @@ function draw_leaderboard() {
 	    .data(top_channel)
 	    .enter()
         .append('tr')
-
-    rows.selectAll('td')
-        .data(function(d){ return titles.map(function(i) { return { 'value': d[i] }; }); })
+    
+    var columns = ["key"]
+    var cells = rows.selectAll('td')
+        .data(function(row) { return columns.map(function (column) { return { value: row } }) })
         .enter()
         .append('td')
-        .text(function (d) { 
-            console.log(d.value); 
-            return d.value })
+        .text(function (d) { return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
         .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
         .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
         .style("font-size", "12px")
+        .style("text-anchor", "middle")  
+    
+    console.log("=================")
+
+    return table
 
 }
 
@@ -585,4 +700,5 @@ slider.onChange(function(newRange){
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
     draw_trend_heatmap();
+    //draw_leaderboard()
 });
