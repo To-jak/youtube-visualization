@@ -151,6 +151,10 @@ g.not-selected {
     background-color: burlywood;
 }
 
+.dropdown{
+    width: 120px;
+    float:right;
+}
 /****** WORDCLOUD ******/
 
 .wordcloud-area {
