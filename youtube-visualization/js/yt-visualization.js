@@ -294,14 +294,14 @@ let selected_categories = new Set();
 // Scales
 var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 120])
 var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
-var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, 20])
+var likeRatioColor = d3.scaleSequential(d3.interpolateYlGn).domain([0, 30])
 
 // Force simulation
 var simulation = d3.forceSimulation()
     .force("x", d3.forceX().strength(0.005))
     .force("y", d3.forceY().strength(0.005))
     .force("collide", d3.forceCollide(function (d) {
-        return radiusScale(d.value['nb_videos']) + 10
+        return radiusScale(d.value['nb_videos']) + 5
     }))
     .on('tick', ticked)
 
@@ -345,7 +345,7 @@ function draw_cat_analysis() {
     // Apply classic force after a potential resize
     simulation.nodes(cat_data)
     .force("collide", d3.forceCollide(function (d) {
-        return radiusScale(d.value['nb_videos']) + 10
+        return radiusScale(d.value['nb_videos']) + 5
     }))
 
     var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
@@ -384,8 +384,10 @@ function draw_cat_analysis() {
                 + "<div class=\"tooltip-content\">"
                 + "Videos: <b>" + d.value['nb_videos'].toLocaleString() + "</b><br/>"
                 + "Views: <b>" + d.value['total_views'].toLocaleString() + "</b><br/>"
+                + "------------------</br>"
                 + "<i class=\"fa fa-thumbs-up\" aria-hidden=\"true\"></i> <b>" + d.value['total_likes'].toLocaleString() + "</b><br/>"
-                + "<i class=\"fa fa-thumbs-down\" aria-hidden=\"true\"></i> <b>" + d.value['total_dislikes'].toLocaleString() + "</b><br/></div>")
+                + "<i class=\"fa fa-thumbs-down\" aria-hidden=\"true\"></i> <b>" + d.value['total_dislikes'].toLocaleString() + "</b><br/>"
+                + "Like ratio: <b>" + d.value['like_ratio'].toLocaleString() + "</b><br/></div>")
                 .style("left", (d3.event.pageX) + 20 + "px")
                 .style("top", (d3.event.pageY - 30) + "px");
         })
@@ -442,7 +444,7 @@ function draw_cat_analysis() {
         });
 
     simulation.nodes(cat_data)
-        .alpha(0.2).restart();
+        .alpha(0.5).restart();
 }
 
 function resize_categories() {
@@ -466,8 +468,8 @@ function resize_categories() {
 
     simulation.nodes(cat_data)
     .force("collide", d3.forceCollide(function (d) {
-        return temp_radiusScale(d.value['nb_videos']) + 10
-    })).alpha(0.2).restart()
+        return temp_radiusScale(d.value['nb_videos']) + 5
+    })).alpha(0.5).restart()
 }
 
 // Leaderboard /////////////////////////////////////////////////

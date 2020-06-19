@@ -134,13 +134,15 @@ g.not-selected {
 
 .cat-tooltip > .tooltip-header {
     font-weight: bolder;
-    margin-bottom: 3px;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .cat-tooltip > .tooltip-content {
-    text-align: left;
+    text-align: center;
     margin-left: 3px;
     margin-right: 3px;
+    line-height: 1.5em;
 }
 
 .category-circle-text {
