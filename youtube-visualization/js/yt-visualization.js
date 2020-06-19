@@ -902,7 +902,7 @@ function draw_trend_heatmap() {
 
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
-SLIDER_RATE_LIMIT_MS = 100 //no limit
+SLIDER_RATE_LIMIT_MS = 40 //25 Hz
 SLIDE_MAX = 1000
 date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
 
@@ -919,6 +919,8 @@ function init_timeline_range() {
 
 // Change function called upon slider change. It calls refresh functions
 last_slider_change=new Date();
+need_refresh = false;
+timer_running = false;
 slider.onChange(function (newRange) {
     date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
 
@@ -926,11 +928,30 @@ slider.onChange(function (newRange) {
     d3.select("#range-label")
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
-    const now = +new Date();
-    if (now - last_slider_change >= SLIDER_RATE_LIMIT_MS) { // 50Hz seconds
-        last_slider_change = now;
-            t0 = performance.now()
-        draw_time_graph();
+    if (SLIDER_RATE_LIMIT_MS != 0){
+        // rate limit: use a timer to avoid drawing too often
+        if (timer_running){
+            need_refresh=true;
+        } else {
+            timer_running=true;
+            need_refresh=false;
+            draw_time_graph();//draw_refresh();
+            refresh_timer = setTimeout(
+                function (){
+                    if (need_refresh){draw_time_graph();/*draw_refresh();*/}
+                    timer_running=false;
+                },
+                SLIDER_RATE_LIMIT_MS
+            )
+        }
+    }else{
+        draw_time_graph();//draw_refresh();
+    }
+    draw_refresh();
+});
+function draw_refresh(){
+        t0 = performance.now()
+        //draw_time_graph();
         t1 = performance.now()
         draw_trend_heatmap();
         t2 = performance.now()
@@ -942,10 +963,7 @@ slider.onChange(function (newRange) {
         console.log("Call to draw_trend_heatmap took " + (t2 - t1) + " milliseconds.")
         console.log("Call to draw_cat_analysis took " + (t3 - t2) + " milliseconds.")
         console.log("Call to draw_leaderboard took " + (t4 - t3) + " milliseconds.")
-     
-    }
-});
-
+}
 
 /************************************************************
 * UTILITY AND FILTERING FUNCTIONS
