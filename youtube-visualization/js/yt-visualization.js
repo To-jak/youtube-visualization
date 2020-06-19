@@ -201,22 +201,33 @@ function draw_time_graph() {
 
 // Category Analysis /////////////////////////////////////////////////
 
-var selected_categories = new Set();;
+// Define the div element for the tooltip
+var cat_tooltip = d3.select("body").append("div")
+    .attr("class", "cat-tooltip")
+    .style("opacity", 0);
+
+let catAnalysis = {
+    height: document.getElementById("CategoryAnalysis").clientHeight,
+    width: document.getElementById("CategoryAnalysis").clientWidth
+}
+
+let catAnalysisSVG = d3.select("#CategoryAnalysis")
+    .append("svg")
+    .attr("width", catAnalysis.width)
+    .attr("height", catAnalysis.height)
+    
+let selected_categories = new Set();
+
+// Scales
+var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
+var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
+
+// Force simulation
+var simulation = d3.forceSimulation()
+.force("x", d3.forceX(catAnalysis.width / 2).strength(0.05))
+.force("y", d3.forceY(catAnalysis.height / 2).strength(0.05))
+
 function draw_cat_analysis() {
-
-    // Define the div element for the tooltip
-    var cat_tooltip = d3.select("body").append("div")
-        .attr("class", "cat-tooltip")
-        .style("opacity", 0);
-
-    // Get height and width of the HTML container
-    var height = document.getElementById("CategoryAnalysis").clientHeight
-    var width = document.getElementById("CategoryAnalysis").clientWidth
-
-    var catAnalysisSVG = d3.select("#CategoryAnalysis")
-        .append("svg")
-        .attr("viewBox", "0 0 " + width + " " + height)
-        .attr("transform", "translate(0, 0)")
 
     var cat_data = d3.nest()
         .key(function (d) { return d.category; })
@@ -234,15 +245,12 @@ function draw_cat_analysis() {
         })
         .entries(dataset);
 
-    // Scales
-    var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
-    var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
-
     var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
     var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, maxRatio])
 
-    var circles_g = catAnalysisSVG.selectAll("g")
-        .data(cat_data).enter().append("g").attr("transform", "translate(0,0)")
+    var data_bond = catAnalysisSVG.selectAll("g").data(cat_data)
+
+    var new_circles_g =  data_bond.enter().append("g").attr("transform", "translate(0,0)")
         .classed("selected", false)
         .on("mouseover", function (d) {
             cat_tooltip.transition()
@@ -283,7 +291,7 @@ function draw_cat_analysis() {
         });
 
     // Circles
-    var circles = circles_g.append("circle")
+    new_circles_g.append("circle")
         .attr("class", "category-circle")
         .attr("r", function (d) {
             return radiusScale(d.value['nb_videos'])
@@ -292,7 +300,7 @@ function draw_cat_analysis() {
             return likeRatioColor(d.value['like_ratio'])
         })
 
-    circles_g.append("text")
+    new_circles_g.append("text")
         .attr("class", "category-circle-text")
         .attr('text-anchor', 'middle')
         .attr("x", 0)
@@ -306,20 +314,16 @@ function draw_cat_analysis() {
             return d.key.split(' ')[0];
         });
 
-    // Force simulation
-    var simulation = d3.forceSimulation()
-        .force("x", d3.forceX(width / 2).strength(0.05))
-        .force("y", d3.forceY(height / 2).strength(0.05))
-        .force("collide", d3.forceCollide(function (d) {
-            return radiusScale(d.value['nb_videos']) + 10
-        }))
-
     simulation.nodes(cat_data)
-        .on('tick', ticked)
+    .force("collide", d3.forceCollide(function (d) {
+        return radiusScale(d.value['nb_videos']) + 10
+    }))
+    .on('tick', ticked)
 
     function ticked() {
-        circles_g.attr("x", function (d) { return d.x })
-            .attr("transform", function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; })
+        catAnalysisSVG.selectAll("g")
+        .attr("x", function (d) { return d.x })
+        .attr("transform", function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; })
     }
 }
 
