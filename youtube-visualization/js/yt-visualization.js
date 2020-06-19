@@ -162,8 +162,8 @@ function calcDate(date1,date2) {
 function draw_time_graph() {
 
     // getting first and last date from the data
-    var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
-    var lastDate = d3.max(dataset.filter(filter_by_time), function (d) { return d.trending_date })
+    var firstDate = d3.min(dataset.filter(filter_by_time).filter(filter_by_category), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
+    var lastDate = d3.max(dataset.filter(filter_by_time).filter(filter_by_category), function (d) { return d.trending_date })
 
     console.log("first date:" + firstDate)
     console.log("last date:" + lastDate)
@@ -191,7 +191,7 @@ function draw_time_graph() {
     // Grouping by categories
     var cat_data = d3.nest()
         .key(function (d) { return d.category; })
-        .entries(dataset.filter(filter_by_time))
+        .entries(dataset.filter(filter_by_time).filter(filter_by_category))
 
     // Applying histogram to each category
     hist_dict = {}
@@ -309,6 +309,16 @@ function ticked() {
         .attr("transform", function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; })
 }
 
+function filter_by_category(d) {
+    // Filter data entries with .filter(filter_by_category)
+    if (selected_categories.size == 0) {
+        return true
+    }
+    else{
+        return selected_categories.has(d.category)
+    }
+}
+
 function draw_cat_analysis() {
 
     var cat_data = d3.nest()
@@ -389,7 +399,9 @@ function draw_cat_analysis() {
                 d3.select(this).classed("selected", false);
                 console.log(selected_categories)
             }
+            
             draw_trend_heatmap();
+            draw_time_graph();
         });
 
     // Circles
