@@ -240,12 +240,6 @@ function draw_leaderboard() {
     }
     console.log("top 10 channel by views = ", top_channel)
 
-    // create table
-    var svg_table = d3.select("#Leaderboard")
-        .append("svg")
-        .attr("viewBox", "0 0 " + width + " " + height)
-        .attr("transform", "translate(0, 0)")
-    
     /*var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
         .selectAll("image")
@@ -257,24 +251,26 @@ function draw_leaderboard() {
         .attr('width', 30)
         .attr('height', 30)
         .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")*/
-
-    var table = svg_table.select("body")
+    
+    // create table
+    var table =  d3.select("#Leaderboard")
         .append('table')
         .style("border-collapse", "collapse")
         .style("border", "2px black solid")      
-        .attr("x", "200")
-        .attr("y", "200")
+        .attr("x", "50")
+        .attr("y", "50")
+        .attr("width", "50")
+        .attr("height", "50");
 	var thead = table.append('thead')
 	var tbody = table.append('tbody')
 
-    var title = "LEADERBOARD"
-
     // headers
+    var title = ["LEADERBOARD"]
 	thead.append('tr')
         .selectAll('th')
-        .append('th')
         .data(title)
         .enter()
+        .append('th')
         .text(function(d) { return d; })
         .style("border", "1px black solid")
         .style("padding", "5px")
@@ -287,19 +283,20 @@ function draw_leaderboard() {
 	    .data(top_channel)
 	    .enter()
         .append('tr')
-
-    rows.selectAll('td')
-        .data(function(d){ return titles.map(function(i) { return { 'value': d[i] }; }); })
+    
+    var columns = ["key"]
+    var cells = rows.selectAll('td')
+        .data(function(row) { return columns.map(function (column) { return { value: row } }) })
         .enter()
         .append('td')
-        .text(function (d) { 
-            console.log(d.value); 
-            return d.value })
+        .text(function (d) { return d.value })
         .style("border", "1px black solid")
         .style("padding", "5px")
         .on("mouseover", function(){ d3.select(this).style("background-color", "powderblue")})
         .on("mouseout" , function(){ d3.select(this).style("background-color", "white")})
         .style("font-size", "12px")
+
+    return table
 
 }
 
