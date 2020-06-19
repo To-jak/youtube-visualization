@@ -162,8 +162,9 @@ function calcDate(date1,date2) {
 function draw_time_graph() {
 
     // getting first and last date from the data
-    var firstDate = d3.min(dataset.filter(filter_by_time).filter(filter_by_category), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
-    var lastDate = d3.max(dataset.filter(filter_by_time).filter(filter_by_category), function (d) { return d.trending_date })
+    filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+    var firstDate = d3.min(filtered_dataset, function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
+    var lastDate = d3.max(filtered_dataset, function (d) { return d.trending_date })
 
     console.log("first date:" + firstDate)
     console.log("last date:" + lastDate)
@@ -191,7 +192,7 @@ function draw_time_graph() {
     // Grouping by categories
     var cat_data = d3.nest()
         .key(function (d) { return d.category; })
-        .entries(dataset.filter(filter_by_time).filter(filter_by_category))
+        .entries(filtered_dataset)
 
     // Applying histogram to each category
     hist_dict = {}
@@ -585,14 +586,13 @@ function draw_leaderboard() {
 // function draw_trend_heatmap() { }
 
 var trend = {
-    select_height: 20,
-    height: document.getElementById("TagTrends").clientHeight,
-    width: document.getElementById("TagTrends").clientWidth,
-    margins: { top: 8, bottom: 18, left: 120, right: 8 },
+    svg_height: document.getElementById("TagTrends").clientHeight,
+    svg_width: document.getElementById("TagTrends").clientWidth,
+    margin: { top: 8, bottom: 18, left: 120, right: 8 },
     current_metric: "count"
 };
-trend.in_height = trend.height - trend.margins.top - trend.margins.bottom - trend.select_height;
-trend.in_width = trend.height - trend.margins.left - trend.margins.right;
+trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
+trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
 
 var metrics = ["count",
     "total_views", "total_dislikes", "total_dislikes",
@@ -604,11 +604,11 @@ var metrics = ["count",
 var select_trend = d3.select("#TagTrends")
     .append("select");
 var svg_trend = d3.select("#TagTrends")
-    .append("svg").attr("width", trend.width)
-    .attr("height", trend.height)
+    .append("svg").attr("width", trend.svg_width)
+    .attr("height", trend.svg_height)
     .append("g")
     .attr("transform",
-        "translate(" + trend.margins.left + "," + trend.margins.top + ")");
+        "translate(" + trend.margin.left + "," + trend.margin.top + ")");
 var unique_categories = [];
 var max_duration = -1;
 
@@ -642,11 +642,11 @@ function init_trend_heatmap() {
 
     // Build X scales and axis:
     trend.xscale
-        .range([0, trend.in_width])
+        .range([0, trend.width])
         .domain(duration_range)
         .padding(0.05);
     svg_trend.append("g")
-        .attr("transform", "translate(0," + trend.in_height + ")")
+        .attr("transform", "translate(0," + trend.height + ")")
         .call(d3.axisBottom(trend.xscale));
 
     // Build Y scales and axis:
@@ -654,7 +654,7 @@ function init_trend_heatmap() {
     console.log(unique_categories)
     //trend.cat_scale.domain(unique_categories).range(ii_categories)
     trend.yscale
-        .range([trend.in_height, 0])
+        .range([trend.height, 0])
         .domain(unique_categories)
         .padding(0.05);
     svg_trend.append("g")
@@ -817,6 +817,7 @@ function draw_trend_heatmap() {
 
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
+SLIDER_RATE_LIMIT_MS = 0 //no limit
 SLIDE_MAX = 1000
 date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
 
@@ -826,11 +827,13 @@ var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
 
 // Init function, call upon loading the dataset to set the scale range
 function init_timeline_range() {
-    date_scale.domain(d3.extent(dataset, d => d.trending_date));
+    date_range = d3.extent(dataset, d => d.trending_date);
+    date_scale.domain(date_range);
     slider.range(0, SLIDE_MAX);
 }
 
 // Change function called upon slider change. It calls refresh functions
+last_slider_change=new Date();
 slider.onChange(function (newRange) {
     date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
 
@@ -838,9 +841,13 @@ slider.onChange(function (newRange) {
     d3.select("#range-label")
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
-    draw_trend_heatmap();
-    draw_cat_analysis();
-    draw_time_graph();
+    const now = +new Date();
+    if (now - last_slider_change > SLIDER_RATE_LIMIT_MS) { // 50Hz seconds
+        last_slider_change = now;
+        draw_time_graph();
+        draw_trend_heatmap();
+        draw_cat_analysis();
+    }
 });
 
 
