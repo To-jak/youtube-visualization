@@ -337,7 +337,7 @@ function draw_leaderboard() {
     views_by_channel = d3.nest()
         .key(function(d){ return d.channel_title })
         .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d.views})})
-        .entries(dataset)
+        .entries(dataset.filter(filter_by_time))
 
     console.log("views_by_channel = ", views_by_channel)
 
@@ -347,21 +347,23 @@ function draw_leaderboard() {
     console.log("after sort  = ", views_by_channel[0])
     var top_channel = []
     for (i=0;i<20;i++) { 
-        top_channel[i] = views_by_channel[i].key
+        top_channel[i] = (i+1) + ". " + views_by_channel[i].key
     }
     console.log("top 10 channel by views = ", top_channel)
 
-    /*var logo_trophee = d3.select('#Leaderboard')
+    var logo_trophee = d3.select('#Leaderboard')
         .append('svg')
+        .attr("width", 35)
+        .attr("height", 35)
         .selectAll("image")
         .data([0])
         .enter()
         .append("svg:image")
-        .attr('x', 10)
-        .attr('y', 10)
+        .attr('x', 5)
+        .attr('y', 5)
         .attr('width', 30)
         .attr('height', 30)
-        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")*/
+        .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
     
     // create table
     var table =  d3.select("#Leaderboard")
@@ -370,10 +372,11 @@ function draw_leaderboard() {
         .style("border-collapse", "collapse")
         .style("border", "2px black solid")
         .style("text-anchor", "middle")    
-        .attr("x", "50")
-        .attr("y", "50")
+        .attr("x", "5")
+        .attr("y", "5")
         .attr("width", "200")
-        .attr("height", "100");
+        .attr("height", "100")
+         
 	var thead = table.append('thead')
 	var tbody = table.append('tbody')
 
@@ -631,4 +634,5 @@ slider.onChange(function(newRange){
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
     draw_trend_heatmap();
+    //draw_leaderboard()
 });
