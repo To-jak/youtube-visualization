@@ -392,7 +392,7 @@ function draw_leaderboard() {
     console.log("after sort  = ", channel_grouped[0])
     var top_channel = []
     for (i=0;i<20;i++) { 
-        top_channel[i] = (i+1) + ". " + channel_grouped[i].key
+        top_channel[i] = (i+1) + ". " + channel_grouped[i]//.key
     }
     console.log("top 10 channel by views = ", top_channel)
 
@@ -748,16 +748,25 @@ function filter_by_time(d) {
 function init_timeline_range() {
     // Call upon loading the dataset to set the scale range
     date_scale.domain(d3.extent(dataset, d => d.trending_date));
-    slider.range(0,SLIDE_MAX);
+    //slider.range(0,SLIDE_MAX);
+    slider.getValue()
 }
 
-var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
+//var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
+var slider = new rSlider({
+    target: '#slider-container',
+    values: [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015],
+    range: true,
+    set: [2010, 2013],
+    onChange: function (vals) {
+        console.log(vals);
+    }
+});
 
 slider.onChange(function (newRange) {
+    
     date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
-
-    d3.select("#range-label")
-        .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
+    d3.select("#range-label").html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
     draw_trend_heatmap();
     draw_cat_analysis();
