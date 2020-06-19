@@ -1,52 +1,29 @@
-// Utils /////////////////////////////////////////////////
-var parseDate = d3.timeParse("%Y-%m-%d");
-var parseTime = d3.timeParse("%H:%M:%S")
-
-var category_id_to_name = {
-    1: "Film & Animation",
-    2: "Autos & Vehicles",
-    10: "Music",
-    15: "Pets & Animals",
-    17: "Sports",
-    18: "Short Movies",
-    19: "Travel & Events",
-    20: "Gaming",
-    21: "Videoblogging",
-    22: "People & Blogs",
-    23: "Comedy",
-    24: "Entertainment",
-    25: "News & Politics",
-    26: "Howto & Style",
-    27: "Education",
-    28: "Science & Technology",
-    30: "Movies",
-    31: "Anime/Animation",
-    32: "Action/Adventure",
-    33: "Classics",
-    34: "Comedy",
-    35: "Documentary",
-    36: "Drama",
-    37: "Family",
-    38: "Foreign",
-    39: "Horror",
-    40: "Sci-Fi/Fantasy",
-    41: "Thriller",
-    42: "Shorts",
-    43: "Shows",
-    44: "Trailers"
-}
-
-// Loading Data /////////////////////////////////////////////////
-/*
-Data is laoded here.
-Empty categories are replaced with "".
-Tags are parsed and split
-
-Upon completion and loading:
-- initialization functions are called once
-- drawing functions are called to update the viz
+/* IGR204 Data vizualisation project
+*
+* -----------------------------------
+* by:
+*   Jean-Jules BIGEARD
+*   Julien GUEGUAN
+*   Thomas JACQUEMIN
+*   Tina REY
+*   Brice TAYART
 */
 
+// Loading Data /////////////////////////////////////////////////
+/************************************************************
+* LOADING DATA
+*
+* Data is laoded here from a csv (preprocessing from original file done
+* offline in Python)
+* 
+* Upon completion and loading:
+* - data is stored in global variable 'dataset' for further access
+* - initialization functions are called once
+* - drawing functions are called to update the viz
+************************************************************/
+
+var parseDate = d3.timeParse("%Y-%m-%d");
+var parseTime = d3.timeParse("%H:%M:%S")
 
 let dataset = [];
 function onlyUnique(value, index, self) {
@@ -90,14 +67,21 @@ d3.csv('data/clean_data.csv')
         }
 
         dataset = rows;
-        init_timeline_range();
-        init_trend_heatmap();
-
-        draw_cat_analysis();
-        draw_trend_heatmap();
-        draw_leaderboard();
-        draw_time_graph();
+        init_all();
+        redraw_all();
     });
+
+function init_all(){
+    init_timeline_range();
+    init_trend_heatmap();    
+}
+
+function redraw_all(){
+    draw_cat_analysis();
+    draw_trend_heatmap();
+    draw_leaderboard();
+    draw_time_graph();
+}
 
 // Category Time Graph /////////////////////////////////////////////////
 
@@ -328,6 +312,7 @@ function draw_cat_analysis() {
                 d3.select(this).classed("selected", false);
                 console.log(selected_categories)
             }
+            draw_trend_heatmap();
         });
 
     // Circles
@@ -370,15 +355,16 @@ function draw_leaderboard() {
 
     // Add dropdown button menu
     var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
-    var my_dropdown_menu = d3.select("#selectButton")
-        .attr('x', 200)
-        .attr('y', 50)
+    var my_dropdown_menu = 
+        d3.select("#selectButton")
+            .attr('x', 200)
+            .attr('y', 50)
         .selectAll('myOptions')
         .data(leaderboard_filter)
         .enter()
         .append('option')
-        .text(function (d) { return d[0]; }) // text showed in the menu
-        .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
+            .text(function (d) { return d[0]; }) // text showed in the menu
+            .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
 
     // group videos by channel
     channel_grouped = d3.nest()
@@ -494,15 +480,16 @@ function draw_leaderboard() {
 
 }
 
-// Tag Trends /////////////////////////////////////////////////
-/*
-This is the code for the heatmap on the top left of the screen
-Main functions:
-init_trend_heatmap() called once to initialize some values from dataset
-draw_trend_heatmap() called to update the drawing according to selection
-
-object trend contains global variables that are linked to the thrend heatmap
-*/
+/************************************************************
+* TREND HEATMAP CODE
+* 
+* This is the code for the heatmap on the top left of the screen
+* The main functions:
+* init_trend_heatmap() called once to initialize some values from dataset
+* draw_trend_heatmap() called to update the drawing according to selection
+* 
+* The object 'trend' contains global variables that are linked to the thrend heatmap
+************************************************************/
 
 //temporary placeholders for dev
 // function init_trend_heatmap() { } 
@@ -586,19 +573,6 @@ function init_trend_heatmap(){
 
 }
 
-/*
-// create a tooltip
-trend.tooltip = d3.select("body")
-    .append("div")
-    .style("opacity", 0)
-    .attr("class", "tooltip")
-    .style("background-color", "white")
-    .style("border", "solid")
-    .style("border-width", "2px")
-    .style("border-radius", "5px")
-    .style("padding", "5px")
-*/
-
 // Drop down callback
 function dropdownChange(){
     trend.current_metric = d3.select(this).property('value');
@@ -637,12 +611,13 @@ trend.mouseleave = function(d) {
 function draw_trend_heatmap(){
     /*
     Here, the data is first processed to give an array that gives a list of statistics
-    for each category and each trend duration
+    for each category and each trend duration. The output is an array with attributes
+    category and trend_duration used as keys to map on a 2D grid and with a list of
+    metrics computed on all videaos that share the two key attributes
     */
 
-
     // Reduction on the dataset
-    // Define some functions to access metrics of interest
+    // Define some functions to compute metrics of interest
     function countFcn(v) { return v.length };
     function cumulViews(v) { return d3.sum(v, d => d.views) };
     function cumulLikes(v) { return d3.sum(v, d => d.likes) };
@@ -697,48 +672,99 @@ function draw_trend_heatmap(){
 
     // Preprocesing is over. Now, to the heatmap!
 
-    // Currently selected metric
+    // Currently selected metric (from the dropdown list)
     let metric = trend.current_metric;
     
-    // Build color scale
-    metric_extent = d3.extent(flat_metrics, d=>d[metric]);
+    // Build color scale (range spans selected categories only)
+    metric_extent = d3.extent(
+        flat_metrics.filter(is_cat_selected),
+        d=>d[metric]);
     var trendColors = d3.scaleSequential(d3.interpolateYlGnBu)
     .domain([0 , metric_extent[1]]);//d3.max(flat_metrics,d=>d[metric])]);
     
-    //Heatmap
-    boxes = svg_trend.selectAll()
-        .data(flat_metrics, function(d) {return d.category+'|'+d.trend_duration;});
-    
-    boxes.style("fill", function(d) { return trendColors(d[metric])} );
+    // Draw the heatmap 
+    function keyfcn(d){return d.category+'|'+d.trend_duration;}
+
+    boxes = svg_trend.selectAll("rect")
+        .data(flat_metrics, function(d) {d?keyfcn(d):this.id});
+
+    boxes.exit().remove();  
     boxes.enter()
         .append("rect")
-        .attr("x", function (d) {
-            return trend.xscale(d.trend_duration)
-        })
-        .attr("y", function (d) {
-            return trend.yscale(d.category)
+            .attr("class","heatmap_rect")
+            .attr("id",keyfcn)
+            .attr("x", function (d) {
+                return trend.xscale(d.trend_duration)
             })
-        .attr("width", trend.xscale.bandwidth() )
-        .attr("height", trend.yscale.bandwidth() )
-        .style("fill", function(d) { return trendColors(d[metric])} )
+            .attr("y", function (d) {
+                return trend.yscale(d.category)
+            })
+            .attr("width", trend.xscale.bandwidth() )
+            .attr("height", trend.yscale.bandwidth() )
+            .style("fill", function(d) { return trendColors(d[metric])} )
+            .style("fill-opacity", d=>is_cat_selected(d)?1:.2 )
+            .style("stroke-opacity", d=>is_cat_selected(d)?.5:0 )
         .on("mouseover", trend.mouseover)
         .on("mousemove", d=> trend.mousemove(d))
         .on("mouseleave", trend.mouseleave);
-    boxes.exit().selectAll("rect").remove();
+    boxes.style("fill", function(d) { return trendColors(d[metric])} )
+        .style("fill-opacity", d=>is_cat_selected(d)?1:.2 )
+        .style("stroke-opacity", d=>is_cat_selected(d)?.5:0 )
+
 }
 
 
 // Word Cloud /////////////////////////////////////////////////
 
 
-// Timeline /////////////////////////////////////////////////
+/************************************************************
+* TIMELINE
+*
+* This code handles the time slider at the bottom of the screen to
+* select data according to the pucblish date
+*
+* Slider from https://rasmusfonseca.github.io/d3RangeSlider/
+************************************************************/
 
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
 SLIDE_MAX = 1000
 date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
+
+// Global variable updated upon slider use and slider object
 var date_range = [0, 0];
-date_formatter = d3.timeFormat("%x");// %x is locale format for dates
+var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
+
+// Init function, call upon loading the dataset to set the scale range
+function init_timeline_range() {
+    date_scale.domain(d3.extent(dataset, d => d.trending_date));
+    slider.range(0,SLIDE_MAX);
+}
+
+// Change function called upon slider change. It calls refresh functions
+slider.onChange(function (newRange) {
+    date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
+
+    date_formatter = d3.timeFormat("%x");// %x is locale format for dates
+    d3.select("#range-label")
+        .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
+
+    draw_trend_heatmap();
+    draw_cat_analysis();
+});
+
+
+/************************************************************
+* UTILITY AND FILTERING FUNCTIONS
+*
+* These are generic functions used in all sections to filter data
+************************************************************/
+
+function is_cat_selected(d){
+    // Return true if this entry in in one of the selected categories
+    // Caveat: if no category is selected, keep all
+    return (selected_categories.size==0) ? true : selected_categories.has(d.category);
+}
 
 function filter_by_time(d) {
     // Filter data entries with .filter(filter_by_time)
@@ -746,21 +772,3 @@ function filter_by_time(d) {
     let c2 = d.trending_date <= date_range[1];
     return  c1 && c2
 }
-
-function init_timeline_range() {
-    // Call upon loading the dataset to set the scale range
-    date_scale.domain(d3.extent(dataset, d => d.trending_date));
-    slider.range(0,SLIDE_MAX);
-}
-
-var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
-
-slider.onChange(function (newRange) {
-    date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
-
-    d3.select("#range-label")
-        .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
-
-    draw_trend_heatmap();
-    draw_cat_analysis();
-});
