@@ -155,6 +155,17 @@ timeGraph_svg.append("g")
     .classed("y-timegraph", true)
     .call(d3.axisLeft(y));
 
+function calcDate(date1,date2) {
+    var diff = Math.floor(date1.getTime() - date2.getTime());
+    var day = 1000 * 60 * 60 * 24;
+
+    var days = Math.floor(diff/day);
+    var months = Math.floor(days/31);
+    var years = Math.floor(months/12);
+
+    return {days: days, months: months, years: years}
+    }
+
 function draw_time_graph() {
 
     // getting first and last date from the data
@@ -164,16 +175,25 @@ function draw_time_graph() {
     console.log("first date:" + firstDate)
     console.log("last date:" + lastDate)
 
+    console.log(calcDate(lastDate, firstDate))
+
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
         .domain([firstDate, lastDate])
         .range([0, timeGraph.width]).nice();
 
+    diff_date = calcDate(lastDate, firstDate)
+
+    time_range = d3.timeMonth
+
+    if(diff_date['months'] < 5) {time_range = d3.timeWeek}
+    if(diff_date['months'] < 2) {time_range = d3.timeDay}
+
     // histogram to bin the values along time
     var histogram = d3.histogram()
         .value(function (d) { return d.trending_date; })
         .domain(x.domain())
-        .thresholds(x.ticks(d3.timeMonth));
+        .thresholds(x.ticks(time_range));
 
     // Grouping by categories
     var cat_data = d3.nest()
@@ -214,7 +234,7 @@ function draw_time_graph() {
     var timeLines = timeGraph_svg.selectAll(".timeline").data(time_graph_data)
 
     timeLines.exit().remove()
-    
+
     // D3 line applied to the values
     var Line = d3.line().x(function (d) { return x(d.date) })
     .y(function (d) { return y(d.nb_videos) })
