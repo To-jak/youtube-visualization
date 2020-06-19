@@ -101,53 +101,84 @@ d3.csv('data/clean_data.csv')
 
 // Category Time Graph /////////////////////////////////////////////////
 
+
+let timeGraph = {
+    svg_height: document.getElementById("CategoryTimeGraph").clientHeight,
+    svg_width: document.getElementById("CategoryTimeGraph").clientWidth,
+    margin: { top: 10, right: 30, bottom: 30, left: 60 },
+}
+
+// Define the div element for the tooltip
+var time_tooltip = d3.select("body").append("div")
+    .attr("class", "cat-tooltip")
+    .style("opacity", 0);
+
+// set the dimensions and margins of the graph
+
+timeGraph['width'] = timeGraph.svg_width - timeGraph.margin.left - timeGraph.margin.right,
+timeGraph['height'] = timeGraph.svg_height - timeGraph.margin.top - timeGraph.margin.bottom;
+
+// append the svg object to the #CategroryTimeGraph div of the page
+var timeGraph_svg = d3.select("#CategoryTimeGraph")
+    .append("svg")
+    .attr("width", timeGraph.width + timeGraph.margin.left + timeGraph.margin.right)
+    .attr("height", timeGraph.height + timeGraph.margin.top + timeGraph.margin.bottom)
+    .append("g")
+    .attr("transform",
+        "translate(" + timeGraph.margin.left + "," + timeGraph.margin.top + ")");
+
+
+// getting first and last date from the data
+var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
+var lastDate = d3.max(dataset.filter(filter_by_time), function (d) { return d.trending_date })
+
+console.log("first date:" + firstDate)
+console.log("last date:" + lastDate)
+
+// Add X axis --> it is a date format
+var x = d3.scaleTime()
+    .domain([firstDate, lastDate])
+    .range([0, timeGraph.width]).nice();
+
+// Add X axis
+timeGraph_svg.append("g")
+    .classed("x-timegraph", true)
+    .attr("transform", "translate(0," + timeGraph.height + ")")
+    .call(d3.axisBottom(x));
+
+// Add Y axis
+var y = d3.scaleLinear()
+    .domain([0, 1000])
+    .range([timeGraph.height, 0]).nice();
+
+timeGraph_svg.append("g")
+    .classed("y-timegraph", true)
+    .call(d3.axisLeft(y));
+
 function draw_time_graph() {
 
-    // Define the div element for the tooltip
-    var time_tooltip = d3.select("body").append("div")
-        .attr("class", "cat-tooltip")
-        .style("opacity", 0);
-
-    // Get height and width of the HTML container
-    var svg_height = document.getElementById("CategoryTimeGraph").clientHeight
-    var svg_width = document.getElementById("CategoryTimeGraph").clientWidth
-
-    // set the dimensions and margins of the graph
-    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
-        width = svg_width - margin.left - margin.right,
-        height = svg_height - margin.top - margin.bottom;
-
-    // append the svg object to the #CategroryTimeGraph div of the page
-    var svg = d3.select("#CategoryTimeGraph")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
-
     // getting first and last date from the data
-    var firstDate = new Date(2017, 7, 1) //d3.min(dataset, function (d) { return d.publish_date })
-    var lastDate = d3.max(dataset, function (d) { return d.publish_date })
+    var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
+    var lastDate = d3.max(dataset.filter(filter_by_time), function (d) { return d.trending_date })
 
-    console.log(firstDate)
-    console.log(lastDate)
+    console.log("first date:" + firstDate)
+    console.log("last date:" + lastDate)
 
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
         .domain([firstDate, lastDate])
-        .range([0, width]).nice();
+        .range([0, timeGraph.width]).nice();
 
     // histogram to bin the values along time
     var histogram = d3.histogram()
-        .value(function (d) { return d.publish_date; })
+        .value(function (d) { return d.trending_date; })
         .domain(x.domain())
         .thresholds(x.ticks(d3.timeMonth));
 
     // Grouping by categories
     var cat_data = d3.nest()
         .key(function (d) { return d.category; })
-        .entries(dataset)
+        .entries(dataset.filter(filter_by_time))
 
     // Applying histogram to each category
     hist_dict = {}
@@ -163,22 +194,24 @@ function draw_time_graph() {
     });
 
     // Add X axis
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+    timeGraph_svg.select("g.x-timegraph")
+    .transition()
+    .call(d3.axisBottom(x));
 
     // Add Y axis
     var y = d3.scaleLinear()
         .domain([0, max_count_along_categories])
-        .range([height, 0]).nice();
-    svg.append("g")
+        .range([timeGraph.height, 0]).nice();
+
+    timeGraph_svg.select("g.y-timegraph")
+        .transition()
         .call(d3.axisLeft(y));
 
     time_graph_data = d3.entries(hist_dict)
 
     console.log(time_graph_data)
 
-    var timeLines = svg.selectAll(".timeline")
+    var timeLines = timeGraph_svg.selectAll(".timeline")
         .data(time_graph_data)
         .enter().append("g").attr("class", "timeline");
 
@@ -190,21 +223,26 @@ function draw_time_graph() {
     timeLines.append("path")
         .attr("fill", "none")
         .attr("stroke", "steelblue")
-        .attr("stroke-width", 2)
+        .attr("stroke-width", 2.5)
         .attr("d", function (d) {
             return Line(d.value)
         })
         .on("mouseover", function (d) {
             time_tooltip.transition()
-                .duration(200)
+                .duration(100)
                 .style("opacity", .9);
+            time_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mousemove", function (d) {
             time_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>")
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
         })
         .on("mouseout", function (d) {
             time_tooltip.transition()
-                .duration(500)
+                .duration(200)
                 .style("opacity", 0);
         })
 }
@@ -284,9 +322,9 @@ function draw_cat_analysis() {
         })
 
     data_bond.select("text")
-    .attr('font-size', function (d) {
-        return textScale(d.value['nb_videos'])
-    })
+        .attr('font-size', function (d) {
+            return textScale(d.value['nb_videos'])
+        })
 
     var new_circles_g = data_bond.enter().append("g").attr("transform", "translate(0,0)")
         .classed("selected", false)
@@ -355,7 +393,7 @@ function draw_cat_analysis() {
         });
 
     simulation.nodes(cat_data)
-    .alphaTarget(0.2);
+        .alphaTarget(0.2);
 }
 
 // Leaderboard /////////////////////////////////////////////////
@@ -469,29 +507,29 @@ object trend contains global variables that are linked to the thrend heatmap
 // function draw_trend_heatmap() { }
 
 var trend = {
-    select_height:20,
+    select_height: 20,
     height: document.getElementById("TagTrends").clientHeight,
     width: document.getElementById("TagTrends").clientWidth,
-    margins: {top:8, bottom:18, left:120, right:8},
+    margins: { top: 8, bottom: 18, left: 120, right: 8 },
     current_metric: "count"
 };
 trend.in_height = trend.height - trend.margins.top - trend.margins.bottom - trend.select_height;
-trend.in_width =  trend.height - trend.margins.left - trend.margins.right;
+trend.in_width = trend.height - trend.margins.left - trend.margins.right;
 
 var metrics = ["count",
     "total_views", "total_dislikes", "total_dislikes",
-    "avg_views","avg_likes","avg_dislikes",
+    "avg_views", "avg_likes", "avg_dislikes",
     "likes_per_view", "dislikes_per_view", "like_ratio"]
 
 
 // Init function called once to initialize some values
 var select_trend = d3.select("#TagTrends")
-        .append("select");
+    .append("select");
 var svg_trend = d3.select("#TagTrends")
-        .append("svg")        .attr("width",trend.width)
-        .attr("height",trend.height)
-        .append("g")
-        .attr("transform",
+    .append("svg").attr("width", trend.width)
+    .attr("height", trend.height)
+    .append("g")
+    .attr("transform",
         "translate(" + trend.margins.left + "," + trend.margins.top + ")");
 var unique_categories = [];
 var max_duration = -1;
@@ -499,18 +537,18 @@ var max_duration = -1;
 trend.xscale = d3.scaleBand();
 trend.yscale = d3.scaleBand();
 
-function init_trend_heatmap(){
+function init_trend_heatmap() {
     // Set-up graphic elements
     select_trend
-        .attr("class","dropdown")
-        .attr("id","trend_dropdown")
+        .attr("class", "dropdown")
+        .attr("id", "trend_dropdown")
         .on("change", dropdownChange)
         .selectAll("option")
         .data(metrics)
         .enter()
         .append("option")
-        .attr("value",d=>d)
-        .text(d=>d.replace(/_/g," "));
+        .attr("value", d => d)
+        .text(d => d.replace(/_/g, " "));
 
     // largest trending duration (for scale)
     max_duration = d3.max(
@@ -560,41 +598,41 @@ trend.tooltip = d3.select("body")
 */
 
 // Drop down callback
-function dropdownChange(){
+function dropdownChange() {
     trend.current_metric = d3.select(this).property('value');
-    console.log("current metric is now "+trend.current_metric)
+    console.log("current metric is now " + trend.current_metric)
     draw_trend_heatmap();
 }
 
 // Mouse callbacks for tootip update
-trend.mouseover = function(d) {
-        cat_tooltip.style("opacity", .9)
-    }
-trend.mousemove = function(d) {
-    let mouse = d3.mouse(d3.event.currentTarget); 
+trend.mouseover = function (d) {
+    cat_tooltip.style("opacity", .9)
+}
+trend.mousemove = function (d) {
+    let mouse = d3.mouse(d3.event.currentTarget);
     cat_tooltip
         .html(
-            "<div class=\"tooltip-header\">" + d.category + "</div>"+
-            "<div class=\"tooltip-content\">"+
-            "<b>" +  d.count + "</b> videos have been trending for <b>"+d.trend_duration+"</b> days<br>"+
-            "Total views : <b>"+ d.total_views+"</b><br>"+
-            "Total likes : <b>"+ d.total_likes+"</b><br>"+
-            "Total dislikes : <b>"+ d.total_dislikes+"</b><br>"+
-            "Avg views per video : <b>"+ d.avg_views.toFixed(0)+"</b><br>"+
-            "Avg likes per video : <b>"+ d.avg_likes.toFixed(0)+"</b><br>"+
-            "Avg dislikes per video : <b>"+ d.avg_dislikes.toFixed(0)+"</b><br>"+
-            "Avg likes per view : <b>"+ d.likes_per_view.toFixed(3)+"</b><br>"+
-            "Avg dislikes per view : <b>"+ d.dislikes_per_view.toFixed(3)+"</b><br>"+
-            "Ratio of likes among reactions : <b>"+ d.like_ratio.toFixed(3)+"</b>")
+            "<div class=\"tooltip-header\">" + d.category + "</div>" +
+            "<div class=\"tooltip-content\">" +
+            "<b>" + d.count + "</b> videos have been trending for <b>" + d.trend_duration + "</b> days<br>" +
+            "Total views : <b>" + d.total_views + "</b><br>" +
+            "Total likes : <b>" + d.total_likes + "</b><br>" +
+            "Total dislikes : <b>" + d.total_dislikes + "</b><br>" +
+            "Avg views per video : <b>" + d.avg_views.toFixed(0) + "</b><br>" +
+            "Avg likes per video : <b>" + d.avg_likes.toFixed(0) + "</b><br>" +
+            "Avg dislikes per video : <b>" + d.avg_dislikes.toFixed(0) + "</b><br>" +
+            "Avg likes per view : <b>" + d.likes_per_view.toFixed(3) + "</b><br>" +
+            "Avg dislikes per view : <b>" + d.dislikes_per_view.toFixed(3) + "</b><br>" +
+            "Ratio of likes among reactions : <b>" + d.like_ratio.toFixed(3) + "</b>")
         .style("left", (d3.event.pageX) + "px")
-        .style("top", (d3.event.pageY+70) + "px")
-    }
-trend.mouseleave = function(d) {
-        cat_tooltip.style("opacity", 0)
-    }
+        .style("top", (d3.event.pageY + 70) + "px")
+}
+trend.mouseleave = function (d) {
+    cat_tooltip.style("opacity", 0)
+}
 
 // Main update function
-function draw_trend_heatmap(){
+function draw_trend_heatmap() {
     /*
     Here, the data is first processed to give an array that gives a list of statistics
     for each category and each trend duration
@@ -646,30 +684,31 @@ function draw_trend_heatmap(){
     flat_metrics = [].concat.apply([], flat_metrics);
 
     flat_metrics = Array.from(flat_metrics,
-        function (d){
-            out={...d,
-                likes_per_view:d.total_likes/d.total_views,
-                dislikes_per_view:d.total_dislikes/d.total_views,
-                like_ratio:(d.total_likes+.5)/(d.total_likes+d.total_dislikes+1)
-                };
-                return out;
-            })
+        function (d) {
+            out = {
+                ...d,
+                likes_per_view: d.total_likes / d.total_views,
+                dislikes_per_view: d.total_dislikes / d.total_views,
+                like_ratio: (d.total_likes + .5) / (d.total_likes + d.total_dislikes + 1)
+            };
+            return out;
+        })
 
     // Preprocesing is over. Now, to the heatmap!
 
     // Currently selected metric
     let metric = trend.current_metric;
-    
+
     // Build color scale
-    metric_extent = d3.extent(flat_metrics, d=>d[metric]);
+    metric_extent = d3.extent(flat_metrics, d => d[metric]);
     var trendColors = d3.scaleSequential(d3.interpolateYlGnBu)
-    .domain([0 , metric_extent[1]]);//d3.max(flat_metrics,d=>d[metric])]);
-    
+        .domain([0, metric_extent[1]]);//d3.max(flat_metrics,d=>d[metric])]);
+
     //Heatmap
     boxes = svg_trend.selectAll()
-        .data(flat_metrics, function(d) {return d.category+'|'+d.trend_duration;});
-    
-    boxes.style("fill", function(d) { return trendColors(d[metric])} );
+        .data(flat_metrics, function (d) { return d.category + '|' + d.trend_duration; });
+
+    boxes.style("fill", function (d) { return trendColors(d[metric]) });
     boxes.enter()
         .append("rect")
         .attr("x", function (d) {
@@ -677,12 +716,12 @@ function draw_trend_heatmap(){
         })
         .attr("y", function (d) {
             return trend.yscale(d.category)
-            })
-        .attr("width", trend.xscale.bandwidth() )
-        .attr("height", trend.yscale.bandwidth() )
-        .style("fill", function(d) { return trendColors(d[metric])} )
+        })
+        .attr("width", trend.xscale.bandwidth())
+        .attr("height", trend.yscale.bandwidth())
+        .style("fill", function (d) { return trendColors(d[metric]) })
         .on("mouseover", trend.mouseover)
-        .on("mousemove", d=> trend.mousemove(d))
+        .on("mousemove", d => trend.mousemove(d))
         .on("mouseleave", trend.mouseleave);
     boxes.exit().selectAll("rect").remove();
 }
@@ -704,13 +743,13 @@ function filter_by_time(d) {
     // Filter data entries with .filter(filter_by_time)
     let c1 = d.trending_date >= date_range[0];
     let c2 = d.trending_date <= date_range[1];
-    return  c1 && c2
+    return c1 && c2
 }
 
 function init_timeline_range() {
     // Call upon loading the dataset to set the scale range
     date_scale.domain(d3.extent(dataset, d => d.trending_date));
-    slider.range(0,SLIDE_MAX);
+    slider.range(0, SLIDE_MAX);
 }
 
 var slider = createD3RangeSlider(0, SLIDE_MAX, "#slider-container");
@@ -723,4 +762,5 @@ slider.onChange(function (newRange) {
 
     draw_trend_heatmap();
     draw_cat_analysis();
+    draw_time_graph();
 });
