@@ -430,10 +430,22 @@ function draw_leaderboard() {
 
     // A function that update the Table
     function update(selected_filter) {
+        console.log("___ update leaderboard ___")
+
         // filter data
-        var dataFilter = data.filter(function(d){return d.name==selected_filter})
-        // Give these new data to update line
-        tbody.datum(dataFilter)
+        var data_filtered = d3.nest()
+            .key(function(d){ return d.channel_title })
+            .rollup(function(video_by_channel){ return d3.sum(video_by_channel, function(d){ return d[selected_filter]})})
+            .entries(dataset.filter(filter_by_time))//tbody.data())
+        // sort channel
+        data_filtered.sort(function(x, y){ return d3.descending(x.value, y.value)})
+        var top_channel = []
+        for (i=0;i<20;i++) { 
+            top_channel[i] = (i+1) + ". " + data_filtered[i].key
+        }
+        console.log("new top = ", top_channel)
+        // Give these new data to update table
+        tbody.data(top_channel).enter()
     }    
 
     // When the button is changed, run the updateChart function
