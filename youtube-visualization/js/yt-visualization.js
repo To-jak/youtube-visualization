@@ -86,9 +86,118 @@ d3.csv('data/clean_data.csv')
         draw_cat_analysis();
         draw_trend_heatmap();
         draw_leaderboard();
+        draw_time_graph();
     });
 
 // Category Time Graph /////////////////////////////////////////////////
+
+function draw_time_graph() {
+
+    // Define the div element for the tooltip
+    var time_tooltip = d3.select("body").append("div")
+    .attr("class", "cat-tooltip")
+    .style("opacity", 0);
+    
+    // Get height and width of the HTML container
+    var svg_height = document.getElementById("CategoryTimeGraph").clientHeight
+    var svg_width = document.getElementById("CategoryTimeGraph").clientWidth
+
+    // set the dimensions and margins of the graph
+    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+        width = svg_width - margin.left - margin.right,
+        height = svg_height - margin.top - margin.bottom;
+
+    // append the svg object to the #CategroryTimeGraph div of the page
+    var svg = d3.select("#CategoryTimeGraph")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    // getting first and last date from the data
+    var firstDate = new Date(2017, 7, 1) //d3.min(dataset, function (d) { return d.publish_date })
+    var lastDate = d3.max(dataset, function (d) { return d.publish_date })
+
+    console.log(firstDate)
+    console.log(lastDate)
+
+    // Add X axis --> it is a date format
+    var x = d3.scaleTime()
+        .domain([firstDate, lastDate])
+        .range([0, width]).nice();
+
+    // histogram to bin the values along time
+    var histogram = d3.histogram()
+        .value(function (d) { return d.publish_date; })
+        .domain(x.domain())
+        .thresholds(x.ticks(d3.timeMonth));
+
+    // Grouping by categories
+    var cat_data = d3.nest()
+        .key(function (d) { return d.category; })
+        .entries(dataset)
+
+    // Applying histogram to each category
+    hist_dict = {}
+    max_count_along_categories = 0
+    cat_data.forEach(element => {
+        bins = histogram(element.values)
+        line = bins.map(element => ({ date: element.x0, nb_videos: element.length }))
+        max_count_category = d3.max(line, function (d) { return d.nb_videos })
+        if (max_count_category > max_count_along_categories) {
+            max_count_along_categories = max_count_category
+        }
+        hist_dict[element.key] = line
+    });
+
+    // Add X axis
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    // Add Y axis
+    var y = d3.scaleLinear()
+        .domain([0, max_count_along_categories])
+        .range([height, 0]).nice();
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    time_graph_data = d3.entries(hist_dict)
+
+    console.log(time_graph_data)
+
+    var timeLines = svg.selectAll(".timeline")
+        .data(time_graph_data)
+        .enter().append("g").attr("class", "timeline");
+
+    // D3 line applied to the values
+    var Line = d3.line().x(function (d) { return x(d.date) })
+        .y(function (d) { return y(d.nb_videos) })
+
+    // Add the line
+    timeLines.append("path")
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2)
+        .attr("d", function (d) {
+            return Line(d.value)
+        })
+        .on("mouseover", function (d) {
+            time_tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            time_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+            time_tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        })
+}
 
 // Category Analysis /////////////////////////////////////////////////
 
@@ -129,7 +238,7 @@ function draw_cat_analysis() {
     var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([5, 120])
     var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
 
-    var maxRatio = d3.max(cat_data, function(d) { return d.value['like_ratio'];} );
+    var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
     var likeRatioColor = d3.scaleSequential(d3.interpolateGreens).domain([0, maxRatio])
 
     var circles_g = catAnalysisSVG.selectAll("g")
@@ -153,31 +262,33 @@ function draw_cat_analysis() {
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", function(d){
-            if (!d3.select(this).classed("selected") ){
-                if(selected_categories.size == 0) {
+        .on("click", function (d) {
+            if (!d3.select(this).classed("selected")) {
+                if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", true)
                 }
-                selected_categories.add(d.key)    
+                selected_categories.add(d.key)
                 d3.select(this).classed("not-selected", false)
                 d3.select(this).classed("selected", true)
-               console.log(selected_categories)
-            }else{
+                d3.select(this.childNodes[0]).attr('fill-opacity', 1)
+                console.log(selected_categories)
+            } else {
                 selected_categories.delete(d.key)
-                if(selected_categories.size == 0) {
+                if (selected_categories.size == 0) {
                     catAnalysisSVG.selectAll("g").classed("not-selected", false)
                 }
-               d3.select(this).classed("selected", false);
-               console.log(selected_categories)
-            }});
+                d3.select(this).classed("selected", false);
+                console.log(selected_categories)
+            }
+        });
 
     // Circles
-    circles_g.append("circle")
+    var circles = circles_g.append("circle")
         .attr("class", "category-circle")
         .attr("r", function (d) {
             return radiusScale(d.value['nb_videos'])
         })
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
             return likeRatioColor(d.value['like_ratio'])
         })
 
