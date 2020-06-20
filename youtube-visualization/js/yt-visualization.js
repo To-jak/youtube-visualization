@@ -559,7 +559,7 @@ function init_leaderboard(){
     console.log("size = " + leaderboard.height + " x " + leaderboard.width)
 
     // Add dropdown button menu
-    var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
+    var leaderboard_filter = [["by views", "views", "views"],["by likes", "likes", "likes"], ["by comments","comment_count","comments"], ["by dislikes","dislikes","dislikes"]]
     var my_dropdown_menu = 
         d3.select("#selectButton")
             .on("change", dropdownLeaderboardCB)
@@ -570,8 +570,9 @@ function init_leaderboard(){
         .data(leaderboard_filter)
         .enter()
         .append('option')
-            .text(function (d) { return d[0]; }) // text showed in the menu
-            .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
+        .text(function (d) { return d[0]; }) // text showed in the menu
+        .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
+        .attr("tooltip_string", function (d) { return d[2]; })
 
     var logo_trophee = d3.select('#Leaderboard')
     .append('svg')
