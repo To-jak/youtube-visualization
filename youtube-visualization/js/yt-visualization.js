@@ -155,7 +155,7 @@ timeGraph_svg.append("text")
     .style("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -timeGraph.height / 2)
-    .attr("y", "-15%")
+    .attr("y", "-12%")
     .style("font-size", "13px")
     .style("font-family", "Arial, Helvetica, sans-serif")
     .text("number of videos")
@@ -589,8 +589,8 @@ function init_leaderboard(){
 
     var logo_trophee = d3.select('#Leaderboard')
     .append("div")
-    .style("margin-top", "5px")
-    .style("margin-bottom", "5px")
+    .style("margin-top", "10px")
+    .style("margin-bottom", "10px")
     .html("<i class=\"fa fa-trophy\" aria-hidden=\"true\"></i>")
 
      // create table
