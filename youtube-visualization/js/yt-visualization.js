@@ -26,6 +26,10 @@ var parseDate = d3.timeParse("%Y-%m-%d");
 var parseTime = d3.timeParse("%H:%M:%S")
 
 let dataset = [];
+let filtered_dataset_time = [];
+let filtered_dataset = [];
+let is_filter_up_to_date = false;
+
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
@@ -122,15 +126,15 @@ var timeGraph_svg = d3.select("#CategoryTimeGraph")
 
 
 // getting first and last date from the data
-var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
+/*var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
 var lastDate = d3.max(dataset.filter(filter_by_time), function (d) { return d.trending_date })
 
 console.log("first date:" + firstDate)
-console.log("last date:" + lastDate)
+console.log("last date:" + lastDate)*/
 
 // Add X axis --> it is a date format
 var x = d3.scaleTime()
-    .domain([firstDate, lastDate])
+//    .domain([firstDate, lastDate])
     .range([0, timeGraph.width]).nice();
 
 // Add X axis
@@ -179,7 +183,8 @@ function init_time_graph() {
 function draw_time_graph() {
 
     // getting first and last date from the data
-    filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+    filter_dataset();
+    //filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
     var firstDate = d3.min(filtered_dataset, function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
     var lastDate = d3.max(filtered_dataset, function (d) { return d.trending_date })
 
@@ -380,7 +385,7 @@ let cat_data
 function draw_cat_analysis() {
 
     simulation.stop()
-
+    filter_dataset();
     cat_data = d3.nest()
         .key(function (d) { return d.category; })
         .rollup(function (leaves) {
@@ -395,7 +400,7 @@ function draw_cat_analysis() {
 
             return category_summary
         })
-        .entries(dataset.filter(filter_by_time));
+        .entries(filtered_dataset_time);
 
     // Apply classic force after a potential resize
     simulation.nodes(cat_data)
@@ -470,7 +475,7 @@ function draw_cat_analysis() {
                 d3.select(this).classed("selected", false);
                 console.log(selected_categories)
             }
-
+            reset_filter_flag();
             draw_trend_heatmap();
             draw_time_graph();
             draw_leaderboard();
@@ -623,7 +628,7 @@ function draw_leaderboard() {
     console.log('leaderboard.tooltip_string ='+leaderboard.tooltip_string)
     // group videos by channel
     let sort_attribute = leaderboard.group_variable;
-    let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+    filter_dataset();
 
     var channel_map = d3.rollup(
         filtered_dataset,
@@ -830,8 +835,9 @@ function draw_trend_heatmap() {
     }
 
     // Make a 2 level nested list with those metrics
+    filter_dataset();
     var trendMetrics = d3.rollup(
-        dataset.filter(filter_by_time),
+        filtered_dataset_time,
         allStats,
         d => d.category,
         d => d.trend_duration);
@@ -1043,6 +1049,7 @@ slider.onChange(function (newRange) {
     d3.select("#range-label")
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
+    reset_filter_flag();
     if (SLIDER_RATE_LIMIT_MS != 0){
         // rate limit: use a timer to avoid drawing too often
         if (timer_running){
@@ -1097,4 +1104,20 @@ function filter_by_time(d) {
     let c1 = d.trending_date >= date_range[0];
     let c2 = d.trending_date <= date_range[1];
     return  c1 && c2
+}
+
+// some performance function to filter data only once
+function filter_dataset(){
+    if (is_filter_up_to_date){return}
+    if (dataset.length == 0){
+        filtered_dataset_time = [];
+        filtered_dataset = [];
+    } else{
+        filtered_dataset_time = dataset.filter(filter_by_time);
+        filtered_dataset = filtered_dataset_time.filter(filter_by_category);
+    }
+    is_filter_up_to_date=true;
+}
+function reset_filter_flag(){
+    is_filter_up_to_date = false;
 }
