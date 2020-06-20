@@ -67,7 +67,6 @@ d3.csv('data/clean_data.csv')
         }
 
         dataset = rows;
-  
         
         init_all();
         redraw_all();
@@ -474,6 +473,10 @@ function draw_cat_analysis() {
             draw_trend_heatmap();
             draw_time_graph();
             draw_leaderboard();
+            
+            get_tags();
+            init_layout_cloud();
+            draw_word_cloud();
         });
 
     // Circles
@@ -925,10 +928,13 @@ var svg_wc = d3.select("#WordCloud")
 var words_cloud_material = [];
 
 function get_tags(){
-        var tags = d3.nest()
+        
+    let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+        
+    var tags = d3.nest()
         .key(function(d){return d.tags;})
-          .entries(dataset);
-    
+        .entries(filtered_dataset);
+
         var list_arr_tags = [];
           tags.forEach(function(element) {
             list_arr_tags.push(element) ;
@@ -959,7 +965,7 @@ function get_tags(){
 
     const fontFamily = "Open Sans",
         fontScale = d3.scaleLinear().range([20, 120]), // Construction d'une échelle linéaire continue qui va d'une font de 20px à 120px
-        fillScale = d3.scaleOrdinal(d3.schemeCategory10); // Construction d'une échelle discrète composée de 10 couleurs différentes
+        fillScale = d3.scaleOrdinal(d3.interpolateGreys(10)); // d3.schemeGreys // Construction d'une échelle discrète composée de 10 couleurs différentes
 
 function init_layout_cloud(){
     // Calcul du domain d'entrée de notre fontScale
@@ -977,9 +983,7 @@ function init_layout_cloud(){
         .size([svg_width, svg_height])
         .words(words_cloud_material)
         .padding(1)
-        .rotate(function() {
-            return ~~(Math.random() * 2) * 45;
-        })
+        .rotate(function() {return ~~(Math.random() * 2) * 45;})
         .spiral("rectangular")
         .font(fontFamily)
         .fontSize(d => fontScale(d.size))
@@ -989,7 +993,11 @@ function init_layout_cloud(){
     }
 
 function draw_word_cloud() {
-    
+    console.log("wcm draw", words_cloud_material)
+
+    svg_wc.selectAll("text")
+            .data([]).exit().remove();
+
     svg_wc.selectAll("text")
             .data(words_cloud_material)
             .enter().append("text") // Ajout de chaque mot avec ses propriétés
@@ -1071,6 +1079,9 @@ function draw_refresh(){
         t3 = performance.now()
         if (leaderboard.tbody) {draw_leaderboard()};
         t4 = performance.now()
+        get_tags();
+        init_layout_cloud();
+        draw_word_cloud();
         console.log("Call to draw_time_graph took " + (t1 - t0) + " milliseconds.")
         console.log("Call to draw_trend_heatmap took " + (t2 - t1) + " milliseconds.")
         console.log("Call to draw_cat_analysis took " + (t3 - t2) + " milliseconds.")
