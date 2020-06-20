@@ -693,7 +693,7 @@ function draw_leaderboard() {
 var trend = {
     panel_heigth: document.getElementById("TagTrends").clientHeight,
     svg_width: document.getElementById("TagTrends").clientWidth,
-    margin: { top: 8, bottom: 18, left: 120, right: 8 },
+    margin: { top: 8, bottom: 5, left: 120, right: 8, x_label: 28},
     current_metric: "likes_per_view"
 };
 
@@ -708,7 +708,7 @@ var select_trend = d3.select("#TagTrends")
         .attr("class", "dropdown")
         .attr("id", "trend_dropdown");
 trend.svg_height =  trend.panel_heigth - document.getElementById("trend_dropdown").offsetHeight,
-trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
+trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom - trend.margin.x_label;
 trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
 
 var svg_trend = d3.select("#TagTrends")
@@ -757,6 +757,15 @@ function init_trend_heatmap() {
     svg_trend.append("g")
         .attr("transform", "translate(0," + trend.height + ")")
         .call(d3.axisBottom(trend.xscale));
+
+    // X label
+    let dx = trend.width/2;
+    let dy = trend.height +trend.margin.x_label;
+    svg_trend.append("text")
+        .attr("transform", "translate(" + dx + "," + dy + ")")
+        .attr("class","xaxis_label")
+        .attr("id","trendmap_xaxis_label")
+        .text("Days with 'trending' status")
 
     // Build Y scales and axis:
     trend.yscale

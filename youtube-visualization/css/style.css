@@ -165,6 +165,11 @@ g.not-selected {
     outline-offset: -1px;
 }
 
+.xaxis_label{
+    font: 10px sans-serif;
+    text-anchor: middle;		
+}
+
 #trend_dropdown{
     width: 180px;
     float:left;    
