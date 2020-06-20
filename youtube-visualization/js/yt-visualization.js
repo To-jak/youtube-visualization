@@ -787,12 +787,12 @@ trend.mousemove = function (d) {
             "<div class=\"tooltip-header\">" + d.category + "</div>" +
             "<div class=\"tooltip-content\">" +
             "<b>" + d.count + "</b> videos have been trending for <b>" + d.trend_duration + "</b> days<br>" +
-            "Total views : <b>" + d.total_views + "</b><br>" +
-            "Total likes : <b>" + d.total_likes + "</b><br>" +
-            "Total dislikes : <b>" + d.total_dislikes + "</b><br>" +
-            "Avg views per video : <b>" + d.avg_views.toFixed(0) + "</b><br>" +
-            "Avg likes per video : <b>" + d.avg_likes.toFixed(0) + "</b><br>" +
-            "Avg dislikes per video : <b>" + d.avg_dislikes.toFixed(0) + "</b><br>" +
+            "Total views : <b>" + d.total_views.toLocaleString() + "</b><br>" +
+            "Total likes : <b>" + d.total_likes.toLocaleString() + "</b><br>" +
+            "Total dislikes : <b>" + d.total_dislikes.toLocaleString() + "</b><br>" +
+            "Avg views per video : <b>" + Math.round(d.avg_views).toLocaleString() + "</b><br>" +
+            "Avg likes per video : <b>" + Math.round(d.avg_likes).toLocaleString() + "</b><br>" +
+            "Avg dislikes per video : <b>" + Math.round(d.avg_dislikes).toLocaleString() + "</b><br>" +
             "Avg likes per view : <b>" + d.likes_per_view.toFixed(3) + "</b><br>" +
             "Avg dislikes per view : <b>" + d.dislikes_per_view.toFixed(3) + "</b><br>" +
             "Ratio of likes among reactions : <b>" + d.like_ratio.toFixed(3) + "</b>")
