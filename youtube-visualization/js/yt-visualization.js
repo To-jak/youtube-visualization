@@ -161,8 +161,10 @@ function calcDate(date1,date2) {
     return {days: days, months: months, years: years}
     }
 
-category_color = d3.scaleOrdinal([`#044389`, `#F45B69`, `#F6F740`, `#5DD39E`, `#890620`,
-                                  `#009DDC`, `#C04CFD`, `#08ED14`, '#F18F01', 'DE1704'])
+category_color = d3.scaleOrdinal([`#c52ead`, `#6a45b1`, `#e33e58`, `#ff5733`, `#59b92d`,
+                                  `#07d5e9`, `#de9533`, `#1c4394`, '#9c5607', '#DE1704',
+                                  '#066135', '#330029', '#B8860B', '#83243a', '#152763',
+                                  '7c3c21'])
 function init_time_graph() {
     unique_categories.forEach(d => category_color(d))
 }
@@ -426,7 +428,7 @@ function draw_cat_analysis() {
                 .style("opacity", .9);
         })
         .on("mousemove", function (d) {
-            cat_tooltip.html("<div class=\"tooltip-header\">" + d.key + "</div>"
+            cat_tooltip.html("<div class=\"tooltip-header\" style=\"color: " + category_color(d.key) + "\">" + d.key + "</div>"
                 + "<div class=\"tooltip-content\">"
                 + "Videos: <b>" + d.value['nb_videos'].toLocaleString() + "</b><br/>"
                 + "Views: <b>" + d.value['total_views'].toLocaleString() + "</b><br/>"
