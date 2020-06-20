@@ -538,19 +538,18 @@ var leaderboard={
 // Drop down callback
 function dropdownLeaderboardCB() {
     leaderboard.group_variable = d3.select(this).property('value');
-    leaderboard.tooltip_string = d3.select(this).property('tooltip_string');
+    leaderboard.tooltip_string = d3.select(this).attr('tooltip_string');
+    console.log('callback : leaderboard.group_variable ='+leaderboard.group_variable)
+    console.log('callback : leaderboard.tooltip_string ='+leaderboard.tooltip_string)
     draw_leaderboard();
 }
 // Mouse callbacks for tooltip update
-/*
-the tooltip should display for example "301 views" if the view filter is selected and "3 comments" if comment filter is selected
-*/
-leaderboard.mouseover = function () {
-    cat_tooltip.style("opacity", .9) }
+leaderboard.mouseover = function () { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
+    console.log(leaderboard['tooltip_string'])
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.group_variable )
     .style("left", (d3.event.pageX) + 20 + "px")
-    .style("top", (d3.event.pageY - 30) + "px"); // to replace by leaderboard.group_variable
+    .style("top", (d3.event.pageY - 30) + "px"); 
 }
 leaderboard.mouseleave = function () { cat_tooltip.style("opacity", 0) }
 
@@ -572,7 +571,9 @@ function init_leaderboard(){
         .append('option')
         .text(function (d) { return d[0]; }) // text showed in the menu
         .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
-        .attr("tooltip_string", function (d) { return d[2]; })
+        .attr("tooltip_string", function (d) { 
+            console.log('d2:',d[2])
+            return d[2]; })
 
     var logo_trophee = d3.select('#Leaderboard')
     .append('svg')
@@ -622,7 +623,7 @@ function init_leaderboard(){
 function draw_leaderboard() {
 
     console.log("==== LEADERBOARD ====")
-
+    console.log('leaderboard.tooltip_string ='+leaderboard.tooltip_string)
     // group videos by channel
     let sort_attribute = leaderboard.group_variable;
     let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
