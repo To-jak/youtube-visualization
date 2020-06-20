@@ -544,16 +544,15 @@ function dropdownLeaderboardCB() {
 the tooltip should display for example "301 views" if the view filter is selected and "3 comments" if comment filter is selected
 */
 leaderboard.mouseover = function () {
-    console.log("mouseover") 
     cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    console.log(d)
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.views + "</b> total views <b>")
+    console.log("mousemove : ") 
+    console.log(leaderboard.tooltip_string, d3.select(leaderboard).tooltip_string)
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); // to replace by leaderboard.group_variable
 }
 leaderboard.mouseleave = function () { cat_tooltip.style("opacity", 0) }
-
 
 function init_leaderboard(){
     console.log("==== LEADERBOARD INIT ====")
