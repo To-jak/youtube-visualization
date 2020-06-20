@@ -176,6 +176,11 @@ g.not-selected {
     grid-area: tag-trends-area;
 }
 
+.xaxis_label{
+    font: 10px sans-serif;
+    text-anchor: middle;		
+}
+
 #trend_dropdown{
     width: 180px;
     position: absolute;
