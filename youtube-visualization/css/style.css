@@ -224,7 +224,6 @@ g.not-selected {
 .wordcloud-area {
     position: relative;
     grid-area: wordcloud-area;
-    background-color: crimson;
     overflow: hidden;
 }
 
