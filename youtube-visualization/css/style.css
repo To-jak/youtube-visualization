@@ -167,14 +167,14 @@ g.not-selected {
 
 #trend_dropdown{
     width: 180px;
-    float:right;    
+    float:left;    
 }
 
 /*CSS style from https://www.filamentgroup.com/lab/select-css.html */
 .dropdown {
 
     display: block;
-	font-size: 16px;
+	font-size: 12px;
 	font-family: sans-serif;
 	font-weight: 700;
 	color: #444;
@@ -238,4 +238,8 @@ g.not-selected {
     text-align: center;
     outline: 1px solid black;
     outline-offset: -1px;
+}
+
+#selectButton {
+    width: 120px;
 }
