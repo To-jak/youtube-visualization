@@ -686,13 +686,11 @@ function draw_leaderboard() {
 // function draw_trend_heatmap() { }
 
 var trend = {
-    svg_height: document.getElementById("TagTrends").clientHeight,
+    panel_heigth: document.getElementById("TagTrends").clientHeight,
     svg_width: document.getElementById("TagTrends").clientWidth,
     margin: { top: 8, bottom: 18, left: 120, right: 8 },
     current_metric: "count"
 };
-trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
-trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
 
 var metrics = ["count",
     "total_views", "total_dislikes", "total_dislikes",
@@ -700,9 +698,14 @@ var metrics = ["count",
     "likes_per_view", "dislikes_per_view", "like_ratio"]
 
 
-// Init function called once to initialize some values
 var select_trend = d3.select("#TagTrends")
-    .append("select");
+    .append("select")
+        .attr("class", "dropdown")
+        .attr("id", "trend_dropdown");
+trend.svg_height =  trend.panel_heigth - document.getElementById("trend_dropdown").offsetHeight,
+trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
+trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
+
 var svg_trend = d3.select("#TagTrends")
     .append("svg").attr("width", trend.svg_width)
     .attr("height", trend.svg_height)
@@ -715,6 +718,7 @@ var max_duration = -1;
 trend.xscale = d3.scaleBand();
 trend.yscale = d3.scaleBand();
 
+// Init function called once to initialize some values
 function init_trend_heatmap() {
     // Set-up graphic elements
     select_trend
