@@ -1,17 +1,21 @@
-html, body {
+
+body {
     height: 100%;
     margin: 0;
     margin-top: 5px;
+    background-color: #DFE0E2;
 }
 
 .grid-container {
-    height: 910px;
+    background-color: #DFE0E2;
+    padding: 15px;
+    height: 900px;
     width: 1000px;
     margin: auto;
     display: grid;
-    grid-template-columns: 1fr 1fr 0.5fr 1.3fr;
-    grid-template-rows: 1.2fr 1.3fr 1.2fr 0.3fr;
-    gap: 1px 1px;
+    grid-template-columns: 1fr 1fr 0.2fr 1.3fr;
+    grid-template-rows: 1.7fr 1.3fr 1.2fr 0.1fr;
+    gap: 10px 10px;
     grid-template-areas: "category-timegraph-area category-timegraph-area category-timegraph-area sidebar" "category-analysis-area category-analysis-area category-analysis-area sidebar" "category-analysis-area category-analysis-area category-analysis-area sidebar" "timeline-area timeline-area timeline-area timeline-area";
 }
 
@@ -19,7 +23,7 @@ html, body {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1.2fr 0.8fr 1fr;
-    gap: 1px 1px;
+    gap: 10px 1px;
     grid-template-areas: "tag-trends-area tag-trends-area tag-trends-area" "wordcloud-area wordcloud-area wordcloud-area" "leaderboard-area leaderboard-area leaderboard-area";
     grid-area: sidebar;
 }
@@ -34,6 +38,7 @@ html, body {
 /****** TIMELINE ******/
 
 .timeline-area {
+    background-color: #DFE0E2;
     position: relative;
     grid-area: timeline-area;
     font-family: Arial, Helvetica, sans-serif;
@@ -44,18 +49,20 @@ html, body {
     font-style: bold;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 150%;
-    margin-top: 15px;
+    padding-top: 5px;
+    margin: 0 auto;
+    width: 300px;
 }
 #slider-container {
     position: relative;
-    height:40px;
-    background-color: #f2f2f9;
+    height:25px;
+    background-color: #BFC1C5;
 }
 
 .slider {
     position: absolute;
-    border: 1px solid #AAB;
-    background: #BCE;
+    background: #e5989b;
+    border-radius: 0.2em;
     height: 100%;
     width: 58px;
     top: 0px;
@@ -65,11 +72,10 @@ html, body {
 
 .slider .handle {
     position: absolute;
-    height: 9px;
-    width: 9px;
-    border: 1px solid #AAB;
-    background: #9AC;
-
+    height: 12px;
+    width: 12px;
+    background: #e63946;
+    border-radius: 8em;
     /* Support for bootstrap */
     box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -77,13 +83,13 @@ html, body {
 }
 
 .slider .EE {
-    right: -4px;
+    right: -6px;
     cursor: e-resize;
 }
 
 .slider .WW {
     cursor: w-resize;
-    left: -4px;
+    left: -6px;
 }
 
 .slider .EE, .slider .WW {
@@ -94,20 +100,22 @@ html, body {
 /****** CATEGORY TIMEGRAPH ******/
 
 .category-timegraph-area {
+    background-color: white;
+    border: solid 3px #BFC1C5;
+    border-radius: 0.3em;
     position: relative;
     grid-area: category-timegraph-area;
-    outline: 1px solid black;
-    outline-offset: -1px;
     overflow: hidden;
 }
 
 /****** CATEGORY ANALYSIS ******/
 
 .category-analysis-area {
+    background-color: white;
+    border: solid 3px #BFC1C5;
+    border-radius: 0.3em;
     position: relative;
     grid-area: category-analysis-area;
-    outline: 1px solid black;
-    outline-offset: -1px;
     overflow: hidden;
 }
 
@@ -154,15 +162,18 @@ g.not-selected {
 
 #resize-button{
     position: absolute;
+    left: 2px;
+    top: 2px;
 }
 
 /****** TAG TRENDS ******/
 
 .tag-trends-area {
+    background-color: white;
+    border: solid 3px #BFC1C5;
+    border-radius: 0.3em;
     position: relative;
     grid-area: tag-trends-area;
-    outline: 1px solid black;
-    outline-offset: -1px;
 }
 
 .xaxis_label{
@@ -189,9 +200,9 @@ g.not-selected {
 	max-width: 100%;
 	box-sizing: border-box;
 	margin: 0;
-	border: 1px solid #aaa;
+	border: 1px solid #888;
 	box-shadow: 0 1px 0 1px rgba(0,0,0,.04);
-	border-radius: .5em;
+	border-radius: .2em;
 	-moz-appearance: none;
 	-webkit-appearance: none;
 	appearance: none;
@@ -228,6 +239,8 @@ g.not-selected {
 
 .wordcloud-area {
     position: relative;
+    border: solid 3px #BFC1C5;
+    border-radius: 0.3em;
     grid-area: wordcloud-area;
     background-color: white;
     overflow: hidden;
@@ -236,15 +249,17 @@ g.not-selected {
 /****** LEADERBOARD ******/
 
 .leaderboard-area {
+    background-color: white;
+    border: solid 3px #BFC1C5;
+    border-radius: 0.3em;
     position: relative;
     grid-area: leaderboard-area;
     overflow-y: scroll;
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
-    outline: 1px solid black;
-    outline-offset: -1px;
 }
 
 #selectButton {
     width: 120px;
+    margin: 0;
 }
