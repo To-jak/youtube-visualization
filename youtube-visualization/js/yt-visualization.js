@@ -921,7 +921,7 @@ var svg_height = document.getElementById("WordCloud").clientHeight //.offsetWidt
 var svg_width = document.getElementById("WordCloud").clientWidth
 
 // set the dimensions and margins of the graph
-var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+var margin = { top: 30, right: 30, bottom: 30, left: 30 },
     width = svg_width - margin.left - margin.right,
     height = svg_height - margin.top - margin.bottom;
 
@@ -931,7 +931,7 @@ var svg_wc = d3.select("#WordCloud")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + width / 2 + ", " + height / 2 + ")") // Centrage du groupe
+    .attr("transform", "translate(" + svg_width / 2 + ", " + svg_height / 2 + ")") // Centrage du groupe
 
 var words_cloud_material = [];
 
@@ -1001,7 +1001,6 @@ function init_layout_cloud(){
     }
 
 function draw_word_cloud() {
-    console.log("wcm draw", words_cloud_material)
 
     svg_wc.selectAll("text")
             .data([]).exit().remove();
