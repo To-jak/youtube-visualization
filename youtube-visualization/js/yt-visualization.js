@@ -537,6 +537,9 @@ function dropdownLeaderboardCB() {
     draw_leaderboard();
 }
 // Mouse callbacks for tooltip update
+/*
+the tooltip should display for example "301 views" if the view filter is selected and "3 comments" if comment filter is selected
+*/
 leaderboard.mouseover = function (d) { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
     cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.views + "</b> total views <b>") // to replace by leaderboard.group_variable
