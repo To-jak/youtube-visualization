@@ -538,7 +538,7 @@ var leaderboard={
 // Drop down callback
 function dropdownLeaderboardCB() {
     leaderboard.group_variable = d3.select(this).property('value');
-    leaderboard.group_variable = d3.select(this).property('tooltip_string');
+    leaderboard.tooltip_string = d3.select(this).property('tooltip_string');
     draw_leaderboard();
 }
 // Mouse callbacks for tooltip update
@@ -548,8 +548,6 @@ the tooltip should display for example "301 views" if the view filter is selecte
 leaderboard.mouseover = function () {
     cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    console.log("mousemove : ") 
-    console.log(leaderboard.tooltip_string, d3.select(leaderboard).tooltip_string)
     cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); // to replace by leaderboard.group_variable
