@@ -678,7 +678,7 @@ function draw_leaderboard() {
 // function draw_trend_heatmap() { }
 
 var trend = {
-    panel_heigth: document.getElementById("TagTrends").clientHeight,
+    svg_height: document.getElementById("TagTrends").clientHeight,
     svg_width: document.getElementById("TagTrends").clientWidth,
     margin: { top: 8, bottom: 5, left: 120, right: 8, x_label: 28},
     current_metric: "likes_per_view"
@@ -694,7 +694,8 @@ var select_trend = d3.select("#TagTrends")
     .append("select")
         .attr("class", "dropdown")
         .attr("id", "trend_dropdown");
-trend.svg_height =  trend.panel_heigth - document.getElementById("trend_dropdown").offsetHeight,
+
+trend.margin.top += document.getElementById("trend_dropdown").offsetHeight,
 trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom - trend.margin.x_label;
 trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
 
