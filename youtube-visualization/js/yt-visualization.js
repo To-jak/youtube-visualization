@@ -531,12 +531,14 @@ var leaderboard={
     height : document.getElementById("Leaderboard").clientHeight,
     width : document.getElementById("Leaderboard").clientWidth,
     group_variable : "views",
+    tooltip_string : "views",
     tbody : undefined
 };
 
 // Drop down callback
 function dropdownLeaderboardCB() {
     leaderboard.group_variable = d3.select(this).property('value');
+    leaderboard.group_variable = d3.select(this).property('tooltip_string');
     draw_leaderboard();
 }
 // Mouse callbacks for tooltip update
