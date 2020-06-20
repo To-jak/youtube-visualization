@@ -74,7 +74,8 @@ d3.csv('data/clean_data.csv')
 function init_all(){
     init_timeline_range();
     init_trend_heatmap();
-    init_leaderboard();    
+    init_leaderboard();
+    init_time_graph();
 }
 
 function redraw_all(){
@@ -160,6 +161,12 @@ function calcDate(date1,date2) {
     return {days: days, months: months, years: years}
     }
 
+category_color = d3.scaleOrdinal([`#044389`, `#F45B69`, `#F6F740`, `#5DD39E`, `#890620`,
+                                  `#009DDC`, `#C04CFD`, `#08ED14`, '#F18F01', 'DE1704'])
+function init_time_graph() {
+    unique_categories.forEach(d => console.log(category_color(d)))
+}
+
 function draw_time_graph() {
 
     // getting first and last date from the data
@@ -224,8 +231,6 @@ function draw_time_graph() {
 
     time_graph_data = d3.entries(hist_dict)
 
-    console.log(time_graph_data)
-
     var timeLines = timeGraph_svg.selectAll(".timeline").data(time_graph_data)
 
     timeLines.exit().remove()
@@ -241,7 +246,9 @@ function draw_time_graph() {
     .attr("stroke-width", 2.5)
     .append("path")
     .attr("fill", "none")
-    .attr("stroke", "steelblue")
+    .attr("stroke", function (d) {
+        return category_color(d.key)
+    })
     .attr("stroke-width", 2.5)
     .attr("d", function (d) {
         return Line(d.value)
