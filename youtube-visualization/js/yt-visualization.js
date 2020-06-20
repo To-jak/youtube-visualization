@@ -628,7 +628,7 @@ var words_cloud_material = [];
 
 function get_tags(){
         var tags = d3.nest()
-        .key(function(d){return d.tags;})//.rollup(function(leaves) {return leaves.length; })
+        .key(function(d){return d.tags;})
           .entries(dataset);
     
         var list_arr_tags = [];
@@ -648,8 +648,14 @@ function get_tags(){
         });
 
         words_cloud_material = d3.nest().key(function(d){return d.text;}).rollup(function(leaves) {return leaves.length; })
-        .entries(words_cloud_material);
-        words_cloud_material.length = 10;
+        .entries(words_cloud_material).sort(function(x, y){ return d3.descending(x.value, y.value)})
+
+       words_cloud_material.length = 20;
+        
+        words_cloud_material.forEach(function(element){
+            element["text"]=element.key
+            element["size"]=element.value
+        })
     }
 
 
@@ -657,11 +663,10 @@ function get_tags(){
         fontScale = d3.scaleLinear().range([20, 120]), // Construction d'une échelle linéaire continue qui va d'une font de 20px à 120px
         fillScale = d3.scaleOrdinal(d3.schemeCategory10); // Construction d'une échelle discrète composée de 10 couleurs différentes
 
-        function init_layout_cloud(){
+function init_layout_cloud(){
     // Calcul du domain d'entrée de notre fontScale
     // L'objectif est que la plus petite occurence d'un mot soit associée à une font de 20px
     // La plus grande occurence d'un mot est associée à une font de 120px
-    
     let minSize = d3.min(words_cloud_material, d => d.size);
     let maxSize = d3.max(words_cloud_material, d => d.size);
     
@@ -683,21 +688,18 @@ function get_tags(){
         .on("end", draw_word_cloud)
         .start();
 
-    console.log("wcm_upd", words_cloud_material)
     }
-
-        
 
 function draw_word_cloud() {
     
     svg_wc.selectAll("text")
             .data(words_cloud_material)
             .enter().append("text") // Ajout de chaque mot avec ses propriétés
-                .style("font-size", d => d.size + "px" + 20)
+                .style("font-size", d => d.size + "px")
                 .style("font-family", fontFamily)
                 .style("fill", d => fillScale(d.size))
                 .attr("text-anchor", "middle")
-                .attr("transform", d => "translate(" + [d.x/10, d.y/10] + ")rotate(" + d.rotate + ")")
+                .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
                 .text(d => d.key);
 }
 
