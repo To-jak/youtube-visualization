@@ -555,7 +555,6 @@ function dropdownLeaderboardCB() {
 // Mouse callbacks for tooltip update
 leaderboard.mouseover = function () { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    console.log(leaderboard['tooltip_string'])
     cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); 
@@ -574,6 +573,7 @@ function init_leaderboard(){
             .attr('x', 200)
             .attr('y', 50)
             .attr("class","dropdown")
+            .attr("transform", "translate(100,0)")
         .selectAll('myOptions')
         .data(leaderboard_filter)
         .enter()
@@ -620,7 +620,6 @@ function init_leaderboard(){
 function draw_leaderboard() {
 
     console.log("==== LEADERBOARD ====")
-    console.log('leaderboard.tooltip_string ='+leaderboard.tooltip_string)
     // group videos by channel
     let sort_attribute = leaderboard.group_variable;
     let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
