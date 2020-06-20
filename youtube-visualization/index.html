@@ -33,11 +33,11 @@
 
         <!-- Category Analysis-->
         <div class="category-analysis-area" id="CategoryAnalysis">
+            <button name="button" id="resize-button" onclick="resize_categories()">Resize</button>
         </div>       
 
         <!-- Timeline-->
         <div class="timeline-area" id="Timeline">
-            <h1 class="area-title">Timeline Slider</h1>
             <div id="slider-container"></div>
             <div id="range-label"></div>
         </div>
@@ -45,17 +45,17 @@
         <div class="sidebar" id="SideBar">
 
             <!-- TagTrends -->
-            <div class="tag-trends-area" id="TagTrends">
-                <h1 class="area-title">TagTrends</h1>
-            </div>
+            <div class="tag-trends-area" id="TagTrends"></div>
 
             <!-- WordCloud -->
             <div class="wordcloud-area" id="WordCloud">
             </div>
 
             <!-- Leaderboard -->
-            <div class="leaderboard-area" id="Leaderboard">
-            </div>
+            <div class="leaderboard-area" id="Leaderboard"></div>
+            <!-- Initialize a select button -->
+            <select id="selectButton"></select>
+
         </div>
 
     </div>
