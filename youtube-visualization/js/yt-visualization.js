@@ -639,7 +639,7 @@ function draw_leaderboard() {
  
     var top_channel = []
     for (i=0;i<20 && i<channel_grouped.length;i++) { 
-        top_channel[i] = (i+1) + ". " + channel_grouped[i].key
+        top_channel[i] = channel_grouped[i]
     }
     console.log("top 10 channel by "+sort_attribute+" = ", top_channel)
 
@@ -658,7 +658,7 @@ function draw_leaderboard() {
         .data(function (row) { return columns.map(function (column) { return { value: row } }) })
         .enter()
             .append('td')
-                .text(function (d) { return d.value })
+                .text(function (d) { return d.value.key })
                 .style("border", "1px black solid")
                 .style("padding", "5px")
                 .style("font-size", "12px")
