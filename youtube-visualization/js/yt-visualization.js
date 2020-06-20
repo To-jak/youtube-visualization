@@ -538,16 +538,18 @@ var leaderboard={
 // Drop down callback
 function dropdownLeaderboardCB() {
     leaderboard.group_variable = d3.select(this).property('value');
-    leaderboard.tooltip_string = d3.select(this).attr('tooltip_string');
-    console.log('callback : leaderboard.group_variable ='+leaderboard.group_variable)
-    console.log('callback : leaderboard.tooltip_string ='+leaderboard.tooltip_string)
+    leaderboard.tooltip_string =  leaderboard.group_variable //d3.select(this).property('text');
+    if (leaderboard.tooltip_string == "comment_count"){
+        leaderboard.tooltip_string  = "comments"
+    }
+
     draw_leaderboard();
 }
 // Mouse callbacks for tooltip update
 leaderboard.mouseover = function () { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
     console.log(leaderboard['tooltip_string'])
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.group_variable )
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); 
 }
@@ -558,7 +560,7 @@ function init_leaderboard(){
     console.log("size = " + leaderboard.height + " x " + leaderboard.width)
 
     // Add dropdown button menu
-    var leaderboard_filter = [["by views", "views", "views"],["by likes", "likes", "likes"], ["by comments","comment_count","comments"], ["by dislikes","dislikes","dislikes"]]
+    var leaderboard_filter = [["by views", "views",["by likes", "likes", ["by comments","comment_count", ["by dislikes","dislikes"]]
     var my_dropdown_menu = 
         d3.select("#selectButton")
             .on("change", dropdownLeaderboardCB)
@@ -571,9 +573,6 @@ function init_leaderboard(){
         .append('option')
         .text(function (d) { return d[0]; }) // text showed in the menu
         .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
-        .attr("tooltip_string", function (d) { 
-            console.log('d2:',d[2])
-            return d[2]; })
 
     var logo_trophee = d3.select('#Leaderboard')
     .append("div")
@@ -643,7 +642,7 @@ function draw_leaderboard() {
     var rows = tbody.selectAll('tr')
         .data(top_channel)
         .enter()
-            .append('tr');
+        .append('tr');
 
     var columns = ["key"]
     var cells = rows.selectAll('td')
