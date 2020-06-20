@@ -536,6 +536,15 @@ function dropdownLeaderboardCB() {
     leaderboard.group_variable = d3.select(this).property('value');
     draw_leaderboard();
 }
+// Mouse callbacks for tooltip update
+leaderboard.mouseover = function (d) { cat_tooltip.style("opacity", .9) }
+leaderboard.mousemove = function (d) {
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.views + "</b> total views <b>") // to replace by leaderboard.group_variable
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY + 70) + "px")
+}
+leaderboard.mouseleave = function (d) { cat_tooltip.style("opacity", 0) }
+
 
 function init_leaderboard(){
     console.log("==== LEADERBOARD INIT ====")
@@ -582,8 +591,6 @@ function init_leaderboard(){
      .attr("width", "200")
      .attr("height", "100")
 
-
- 
     var thead = table.append('thead');
     var tbody = table.append('tbody');
     leaderboard.tbody = tbody;
@@ -601,7 +608,6 @@ function init_leaderboard(){
                 .style("background-color", "lightgray")
                 .style("font-weight", "bold")
                 .style("text-transform", "uppercase")
-
 }
 
 function draw_leaderboard() {
@@ -618,12 +624,9 @@ function draw_leaderboard() {
         d => d.channel_title);
     channel_grouped = Array.from(channel_map.keys(),
         function(k){return{key:k, value:channel_map.get(k)}})
-    //console.log("channel_grouped = ", channel_grouped)
 
     // sort channel by views 
-    //console.log("before sort = ", channel_grouped[0])
     channel_grouped.sort(function(x, y){ return d3.descending(x.value, y.value)})
-    //console.log("top 10 channel by "+sort_attribute+" = ", top_channel)
  
     var top_channel = []
     for (i=0;i<20 && i<channel_grouped.length;i++) { 
@@ -651,9 +654,13 @@ function draw_leaderboard() {
                 .style("padding", "5px")
                 .style("font-size", "12px")
                 .style("text-anchor", "middle")  
-            .on("mouseover", function () { d3.select(this).style("background-color", "powderblue") })
-            .on("mouseout", function () { d3.select(this).style("background-color", "white") })
-    
+            .on("mouseover", function () { 
+                d3.select(this).style("background-color", "powderblue")
+                leaderboard.mouseover })
+            .on("mouseout", function () { 
+                d3.select(this).style("background-color", "white") })
+            .on("mousemove", d => leaderboard.mousemove(d))
+            .on("mouseleave", leaderboard.mouseleave);
     console.log("=================")
 }
 
