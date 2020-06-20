@@ -567,7 +567,7 @@ function init_leaderboard(){
     console.log("size = " + leaderboard.height + " x " + leaderboard.width)
 
     // Add dropdown button menu
-    var leaderboard_filter = [["by views", "views",["by likes", "likes", ["by comments","comment_count", ["by dislikes","dislikes"]]
+    var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
     var my_dropdown_menu = 
         d3.select("#selectButton")
             .on("change", dropdownLeaderboardCB)
