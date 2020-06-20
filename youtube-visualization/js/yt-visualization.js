@@ -560,7 +560,7 @@ function dropdownLeaderboardCB() {
 // Mouse callbacks for tooltip update
 leaderboard.mouseover = function () { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value.toLocaleString() + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); 
 }
@@ -967,8 +967,9 @@ function get_tags(){
 
     const fontFamily = "Open Sans",
         fontScale = d3.scaleLinear().range([20, 120]), // Construction d'une échelle linéaire continue qui va d'une font de 20px à 120px
-        fillScale = d3.scaleOrdinal(d3.schemeCategory10); // Construction d'une échelle discrète composée de 10 couleurs différentes
-
+        fillScale = d3.scaleOrdinal(d3.schemeGreys); // Construction d'une échelle discrète composée de 10 couleurs différentes
+        //fillScale = d3.schemeGreys[20];
+        //fillScale = d3.scaleSequential(d3.interpolateGreys);
 function init_layout_cloud(){
     // Calcul du domain d'entrée de notre fontScale
     // L'objectif est que la plus petite occurence d'un mot soit associée à une font de 20px
@@ -1003,9 +1004,9 @@ function draw_word_cloud() {
             .enter().append("text") // Ajout de chaque mot avec ses propriétés
                 .style("font-size", d => d.size + "px")
                 .style("font-family", fontFamily)
-                .style("fill", d => fillScale(d.size))
+                //.style("fill", d => fillScale(d.size))
                 .attr("text-anchor", "middle")
-                .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
+                .attr("transform", d => "translate(" + [d.x, d.y] + ")")//rotate(" + d.rotate + ")")
                 .text(d => d.key);
 }
 
