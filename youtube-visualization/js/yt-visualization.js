@@ -67,8 +67,12 @@ d3.csv('data/clean_data.csv')
         }
 
         dataset = rows;
+  
+        
         init_all();
         redraw_all();
+        
+        
     });
 
 function init_all(){
@@ -76,6 +80,8 @@ function init_all(){
     init_trend_heatmap();
     init_leaderboard();
     init_time_graph();
+    get_tags();
+    init_layout_cloud();
 }
 
 function redraw_all(){
@@ -83,6 +89,7 @@ function redraw_all(){
     draw_trend_heatmap();
     draw_leaderboard();
     draw_time_graph();
+    draw_word_cloud();
 }
 
 // Category Time Graph /////////////////////////////////////////////////
@@ -896,6 +903,103 @@ function draw_trend_heatmap() {
 
 
 // Word Cloud /////////////////////////////////////////////////
+
+// Get height and width of the HTML container
+var svg_height = document.getElementById("WordCloud").clientHeight //.offsetWidth * 0.95
+var svg_width = document.getElementById("WordCloud").clientWidth
+
+// set the dimensions and margins of the graph
+var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+    width = svg_width - margin.left - margin.right,
+    height = svg_height - margin.top - margin.bottom;
+
+// append the svg object to the #WordCloud div of the page
+var svg_wc = d3.select("#WordCloud")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + width / 2 + ", " + height / 2 + ")") // Centrage du groupe
+
+var words_cloud_material = [];
+
+function get_tags(){
+        var tags = d3.nest()
+        .key(function(d){return d.tags;})
+          .entries(dataset);
+    
+        var list_arr_tags = [];
+          tags.forEach(function(element) {
+            list_arr_tags.push(element) ;
+        });
+    
+        var list_tags = [];
+        list_arr_tags.forEach(function(element) {
+            element.values[0].tags.forEach(function(word){
+                list_tags.push(word)
+            })
+        });
+    
+        list_tags.forEach(function(tag){
+            words_cloud_material.push({"text": tag, "size": 10})
+        });
+
+        words_cloud_material = d3.nest().key(function(d){return d.text;}).rollup(function(leaves) {return leaves.length; })
+        .entries(words_cloud_material).sort(function(x, y){ return d3.descending(x.value, y.value)})
+
+       words_cloud_material.length = 20;
+        
+        words_cloud_material.forEach(function(element){
+            element["text"]=element.key
+            element["size"]=element.value
+        })
+    }
+
+
+    const fontFamily = "Open Sans",
+        fontScale = d3.scaleLinear().range([20, 120]), // Construction d'une échelle linéaire continue qui va d'une font de 20px à 120px
+        fillScale = d3.scaleOrdinal(d3.schemeCategory10); // Construction d'une échelle discrète composée de 10 couleurs différentes
+
+function init_layout_cloud(){
+    // Calcul du domain d'entrée de notre fontScale
+    // L'objectif est que la plus petite occurence d'un mot soit associée à une font de 20px
+    // La plus grande occurence d'un mot est associée à une font de 120px
+    let minSize = d3.min(words_cloud_material, d => d.size);
+    let maxSize = d3.max(words_cloud_material, d => d.size);
+    
+
+    // Nous projettons le domaine [plus_petite_occurence, plus_grande_occurence] vers le range [20, 120]
+    // Ainsi les mots les moins fréquents seront plus petits et les plus fréquents plus grands
+    fontScale.domain([minSize, maxSize]);
+
+    d3.layout.cloud()
+        .size([svg_width, svg_height])
+        .words(words_cloud_material)
+        .padding(1)
+        .rotate(function() {
+            return ~~(Math.random() * 2) * 45;
+        })
+        .spiral("rectangular")
+        .font(fontFamily)
+        .fontSize(d => fontScale(d.size))
+        .on("end", draw_word_cloud)
+        .start();
+
+    }
+
+function draw_word_cloud() {
+    
+    svg_wc.selectAll("text")
+            .data(words_cloud_material)
+            .enter().append("text") // Ajout de chaque mot avec ses propriétés
+                .style("font-size", d => d.size + "px")
+                .style("font-family", fontFamily)
+                .style("fill", d => fillScale(d.size))
+                .attr("text-anchor", "middle")
+                .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
+                .text(d => d.key);
+}
+
 
 
 /************************************************************
