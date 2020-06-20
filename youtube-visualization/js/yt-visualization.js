@@ -540,13 +540,16 @@ function dropdownLeaderboardCB() {
 /*
 the tooltip should display for example "301 views" if the view filter is selected and "3 comments" if comment filter is selected
 */
-leaderboard.mouseover = function (d) { cat_tooltip.style("opacity", .9) }
+leaderboard.mouseover = function () {
+    console.log("mouseover") 
+    cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.views + "</b> total views <b>") // to replace by leaderboard.group_variable
-            .style("left", (d3.event.pageX) + "px")
-            .style("top", (d3.event.pageY + 70) + "px")
+    console.log(d)
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.views + "</b> total views <b>")
+    .style("left", (d3.event.pageX) + 20 + "px")
+    .style("top", (d3.event.pageY - 30) + "px"); // to replace by leaderboard.group_variable
 }
-leaderboard.mouseleave = function (d) { cat_tooltip.style("opacity", 0) }
+leaderboard.mouseleave = function () { cat_tooltip.style("opacity", 0) }
 
 
 function init_leaderboard(){
@@ -659,11 +662,11 @@ function draw_leaderboard() {
                 .style("text-anchor", "middle")  
             .on("mouseover", function () { 
                 d3.select(this).style("background-color", "powderblue")
-                leaderboard.mouseover })
+                leaderboard.mouseover() })
             .on("mouseout", function () { 
                 d3.select(this).style("background-color", "white") })
             .on("mousemove", d => leaderboard.mousemove(d))
-            .on("mouseleave", leaderboard.mouseleave);
+            .on("mouseleave", leaderboard.mouseleave());
     console.log("=================")
 }
 
