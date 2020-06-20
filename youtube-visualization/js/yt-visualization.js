@@ -68,11 +68,11 @@ d3.csv('data/clean_data.csv')
 
         dataset = rows;
   
-        get_tags();
-        init_layout_cloud();
-        draw_word_cloud();
+        
         init_all();
         redraw_all();
+        
+        
     });
 
 function init_all(){
@@ -80,6 +80,8 @@ function init_all(){
     init_trend_heatmap();
     init_leaderboard();
     init_time_graph();
+    get_tags();
+    init_layout_cloud();
 }
 
 function redraw_all(){
@@ -87,6 +89,7 @@ function redraw_all(){
     draw_trend_heatmap();
     draw_leaderboard();
     draw_time_graph();
+    draw_word_cloud();
 }
 
 // Category Time Graph /////////////////////////////////////////////////
