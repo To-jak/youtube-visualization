@@ -164,7 +164,7 @@ function calcDate(date1,date2) {
 category_color = d3.scaleOrdinal([`#044389`, `#F45B69`, `#F6F740`, `#5DD39E`, `#890620`,
                                   `#009DDC`, `#C04CFD`, `#08ED14`, '#F18F01', 'DE1704'])
 function init_time_graph() {
-    unique_categories.forEach(d => console.log(category_color(d)))
+    unique_categories.forEach(d => category_color(d))
 }
 
 function draw_time_graph() {
@@ -173,11 +173,6 @@ function draw_time_graph() {
     filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
     var firstDate = d3.min(filtered_dataset, function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
     var lastDate = d3.max(filtered_dataset, function (d) { return d.trending_date })
-
-    console.log("first date:" + firstDate)
-    console.log("last date:" + lastDate)
-
-    console.log(calcDate(lastDate, firstDate))
 
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
@@ -231,8 +226,7 @@ function draw_time_graph() {
 
     time_graph_data = d3.entries(hist_dict)
 
-    var timeLines = timeGraph_svg.selectAll(".timeline").data(time_graph_data)
-
+    var timeLines = timeGraph_svg.selectAll(".timeline").data(time_graph_data, d => d.key)
     timeLines.exit().remove()
 
     // D3 line applied to the values
