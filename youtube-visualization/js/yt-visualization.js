@@ -26,6 +26,10 @@ var parseDate = d3.timeParse("%Y-%m-%d");
 var parseTime = d3.timeParse("%H:%M:%S")
 
 let dataset = [];
+let filtered_dataset_time = [];
+let filtered_dataset = [];
+let is_filter_up_to_date = false;
+
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
@@ -121,15 +125,15 @@ var timeGraph_svg = d3.select("#CategoryTimeGraph")
 
 
 // getting first and last date from the data
-var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
+/*var firstDate = d3.min(dataset.filter(filter_by_time), function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
 var lastDate = d3.max(dataset.filter(filter_by_time), function (d) { return d.trending_date })
 
 console.log("first date:" + firstDate)
-console.log("last date:" + lastDate)
+console.log("last date:" + lastDate)*/
 
 // Add X axis --> it is a date format
 var x = d3.scaleTime()
-    .domain([firstDate, lastDate])
+//    .domain([firstDate, lastDate])
     .range([0, timeGraph.width]).nice();
 
 // Add X axis
@@ -178,7 +182,8 @@ function init_time_graph() {
 function draw_time_graph() {
 
     // getting first and last date from the data
-    filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+    filter_dataset();
+    //filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
     var firstDate = d3.min(filtered_dataset, function (d) { return d.trending_date }) //new Date(2017, 7, 1) 
     var lastDate = d3.max(filtered_dataset, function (d) { return d.trending_date })
 
@@ -379,7 +384,7 @@ let cat_data
 function draw_cat_analysis() {
 
     simulation.stop()
-
+    filter_dataset();
     cat_data = d3.nest()
         .key(function (d) { return d.category; })
         .rollup(function (leaves) {
@@ -394,7 +399,7 @@ function draw_cat_analysis() {
 
             return category_summary
         })
-        .entries(dataset.filter(filter_by_time));
+        .entries(filtered_dataset_time);
 
     // Apply classic force after a potential resize
     simulation.nodes(cat_data)
@@ -469,7 +474,7 @@ function draw_cat_analysis() {
                 d3.select(this).classed("selected", false);
                 console.log(selected_categories)
             }
-
+            reset_filter_flag();
             draw_trend_heatmap();
             draw_time_graph();
             draw_leaderboard();
@@ -548,16 +553,17 @@ var leaderboard={
 // Drop down callback
 function dropdownLeaderboardCB() {
     leaderboard.group_variable = d3.select(this).property('value');
-    leaderboard.tooltip_string = d3.select(this).attr('tooltip_string');
-    console.log('callback : leaderboard.group_variable ='+leaderboard.group_variable)
-    console.log('callback : leaderboard.tooltip_string ='+leaderboard.tooltip_string)
+    leaderboard.tooltip_string =  leaderboard.group_variable //d3.select(this).property('text');
+    if (leaderboard.tooltip_string == "comment_count"){
+        leaderboard.tooltip_string  = "comments"
+    }
+
     draw_leaderboard();
 }
 // Mouse callbacks for tooltip update
 leaderboard.mouseover = function () { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    console.log(leaderboard['tooltip_string'])
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.group_variable )
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); 
 }
@@ -568,22 +574,20 @@ function init_leaderboard(){
     console.log("size = " + leaderboard.height + " x " + leaderboard.width)
 
     // Add dropdown button menu
-    var leaderboard_filter = [["by views", "views", "views"],["by likes", "likes", "likes"], ["by comments","comment_count","comments"], ["by dislikes","dislikes","dislikes"]]
+    var leaderboard_filter = [["by views", "views"],["by likes", "likes"], ["by comments","comment_count"], ["by dislikes","dislikes"]]
     var my_dropdown_menu = 
         d3.select("#selectButton")
             .on("change", dropdownLeaderboardCB)
             .attr('x', 200)
             .attr('y', 50)
             .attr("class","dropdown")
+            .attr("transform", "translate(100,0)")
         .selectAll('myOptions')
         .data(leaderboard_filter)
         .enter()
         .append('option')
         .text(function (d) { return d[0]; }) // text showed in the menu
         .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
-        .attr("tooltip_string", function (d) { 
-            console.log('d2:',d[2])
-            return d[2]; })
 
     var logo_trophee = d3.select('#Leaderboard')
     .append("div")
@@ -624,10 +628,9 @@ function init_leaderboard(){
 function draw_leaderboard() {
 
     console.log("==== LEADERBOARD ====")
-    console.log('leaderboard.tooltip_string ='+leaderboard.tooltip_string)
     // group videos by channel
     let sort_attribute = leaderboard.group_variable;
-    let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+    filter_dataset();
 
     var channel_map = d3.rollup(
         filtered_dataset,
@@ -653,7 +656,7 @@ function draw_leaderboard() {
     var rows = tbody.selectAll('tr')
         .data(top_channel)
         .enter()
-            .append('tr');
+        .append('tr');
 
     var columns = ["key"]
     var cells = rows.selectAll('td')
@@ -671,7 +674,7 @@ function draw_leaderboard() {
             .on("mouseout", function () { 
                 d3.select(this).style("background-color", "white") })
             .on("mousemove", d => leaderboard.mousemove(d))
-            .on("mouseleave", leaderboard.mouseleave());
+            .on("mouseleave", leaderboard.mouseleave(),cat_tooltip.style("opacity", 0));
     console.log("=================")
 }
 
@@ -691,13 +694,11 @@ function draw_leaderboard() {
 // function draw_trend_heatmap() { }
 
 var trend = {
-    svg_height: document.getElementById("TagTrends").clientHeight,
+    panel_heigth: document.getElementById("TagTrends").clientHeight,
     svg_width: document.getElementById("TagTrends").clientWidth,
     margin: { top: 8, bottom: 18, left: 120, right: 8 },
     current_metric: "count"
 };
-trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
-trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
 
 var metrics = ["count",
     "total_views", "total_dislikes", "total_dislikes",
@@ -705,9 +706,14 @@ var metrics = ["count",
     "likes_per_view", "dislikes_per_view", "like_ratio"]
 
 
-// Init function called once to initialize some values
 var select_trend = d3.select("#TagTrends")
-    .append("select");
+    .append("select")
+        .attr("class", "dropdown")
+        .attr("id", "trend_dropdown");
+trend.svg_height =  trend.panel_heigth - document.getElementById("trend_dropdown").offsetHeight,
+trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
+trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
+
 var svg_trend = d3.select("#TagTrends")
     .append("svg").attr("width", trend.svg_width)
     .attr("height", trend.svg_height)
@@ -720,6 +726,7 @@ var max_duration = -1;
 trend.xscale = d3.scaleBand();
 trend.yscale = d3.scaleBand();
 
+// Init function called once to initialize some values
 function init_trend_heatmap() {
     // Set-up graphic elements
     select_trend
@@ -782,12 +789,12 @@ trend.mousemove = function (d) {
             "<div class=\"tooltip-header\">" + d.category + "</div>" +
             "<div class=\"tooltip-content\">" +
             "<b>" + d.count + "</b> videos have been trending for <b>" + d.trend_duration + "</b> days<br>" +
-            "Total views : <b>" + d.total_views + "</b><br>" +
-            "Total likes : <b>" + d.total_likes + "</b><br>" +
-            "Total dislikes : <b>" + d.total_dislikes + "</b><br>" +
-            "Avg views per video : <b>" + d.avg_views.toFixed(0) + "</b><br>" +
-            "Avg likes per video : <b>" + d.avg_likes.toFixed(0) + "</b><br>" +
-            "Avg dislikes per video : <b>" + d.avg_dislikes.toFixed(0) + "</b><br>" +
+            "Total views : <b>" + d.total_views.toLocaleString() + "</b><br>" +
+            "Total likes : <b>" + d.total_likes.toLocaleString() + "</b><br>" +
+            "Total dislikes : <b>" + d.total_dislikes.toLocaleString() + "</b><br>" +
+            "Avg views per video : <b>" + Math.round(d.avg_views).toLocaleString() + "</b><br>" +
+            "Avg likes per video : <b>" + Math.round(d.avg_likes).toLocaleString() + "</b><br>" +
+            "Avg dislikes per video : <b>" + Math.round(d.avg_dislikes).toLocaleString() + "</b><br>" +
             "Avg likes per view : <b>" + d.likes_per_view.toFixed(3) + "</b><br>" +
             "Avg dislikes per view : <b>" + d.dislikes_per_view.toFixed(3) + "</b><br>" +
             "Ratio of likes among reactions : <b>" + d.like_ratio.toFixed(3) + "</b>")
@@ -830,8 +837,9 @@ function draw_trend_heatmap() {
     }
 
     // Make a 2 level nested list with those metrics
+    filter_dataset();
     var trendMetrics = d3.rollup(
-        dataset.filter(filter_by_time),
+        filtered_dataset_time,
         allStats,
         d => d.category,
         d => d.trend_duration);
@@ -1048,6 +1056,7 @@ slider.onChange(function (newRange) {
     d3.select("#range-label")
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
+    reset_filter_flag();
     if (SLIDER_RATE_LIMIT_MS != 0){
         // rate limit: use a timer to avoid drawing too often
         if (timer_running){
@@ -1105,4 +1114,20 @@ function filter_by_time(d) {
     let c1 = d.trending_date >= date_range[0];
     let c2 = d.trending_date <= date_range[1];
     return  c1 && c2
+}
+
+// some performance function to filter data only once
+function filter_dataset(){
+    if (is_filter_up_to_date){return}
+    if (dataset.length == 0){
+        filtered_dataset_time = [];
+        filtered_dataset = [];
+    } else{
+        filtered_dataset_time = dataset.filter(filter_by_time);
+        filtered_dataset = filtered_dataset_time.filter(filter_by_category);
+    }
+    is_filter_up_to_date=true;
+}
+function reset_filter_flag(){
+    is_filter_up_to_date = false;
 }
