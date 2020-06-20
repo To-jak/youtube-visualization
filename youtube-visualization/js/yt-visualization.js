@@ -575,18 +575,9 @@ function init_leaderboard(){
             .attr("value", function (d) { return d[1]; }) // corresponding value returned by the button
 
     var logo_trophee = d3.select('#Leaderboard')
-    .append('svg')
-    .attr("width", 35)
-    .attr("height", 35)
-    .selectAll("image")
-    .data([0])
-    .enter()
-    .append("svg:image")
-    .attr('x', 5)
-    .attr('y', 5)
-    .attr('width', 30)
-    .attr('height', 30)
-    .attr("xlink:href", "https://image.freepik.com/vecteurs-libre/trophee-or-plaque-signaletique-du-gagnant-du-concours_68708-545.jpg")
+    .append("div")
+    .style("margin-top", "5px")
+    .html("<i class=\"fa fa-trophy\" aria-hidden=\"true\"></i>")
 
      // create table
      var table = d3.select("#Leaderboard")
