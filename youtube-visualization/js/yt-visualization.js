@@ -309,9 +309,10 @@ var defs = catAnalysisSVG.append('defs');
 let selected_categories = new Set();
 
 // Scales
-var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 120])
+var max_like_ratio = 50
+var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 110])
 var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
-var likeRatioColor = d3.scaleSequential(d3.interpolateYlGn).domain([0, 30])
+var likeRatioColor = d3.scaleSequential(d3.interpolateYlGn).domain([0, max_like_ratio])
 
 // LINEAR GRADIENT for legend
 var linearGradient = defs.append("linearGradient")
@@ -330,7 +331,7 @@ linearGradient.append("stop")
 //Set the color for the end (100%)
 linearGradient.append("stop")
     .attr("offset", "100%")
-    .attr("stop-color", likeRatioColor(30));
+    .attr("stop-color", likeRatioColor(max_like_ratio));
 
 catAnalysisSVG.append("rect")
 .attr("x", -catAnalysis.width/3)
@@ -361,14 +362,14 @@ catAnalysisSVG.append("text")
 .attr("y", (-catAnalysis.height/2 + 15))
 .style("font-size", "12px")
 .style("font-family", "Arial, Helvetica, sans-serif")
-.text("30+");
+.text(max_like_ratio + "+");
 
 // Force simulation
 var simulation = d3.forceSimulation()
-    .force("x", d3.forceX().strength(0.005))
-    .force("y", d3.forceY().strength(0.005))
+    .force("x", d3.forceX().strength(0.008))
+    .force("y", d3.forceY().strength(0.008))
     .force("collide", d3.forceCollide(function (d) {
-        return radiusScale(d.value['nb_videos']) + 5
+        return radiusScale(d.value['nb_videos'])
     }))
     .on('tick', ticked)
 
@@ -404,7 +405,7 @@ function draw_cat_analysis() {
     // Apply classic force after a potential resize
     simulation.nodes(cat_data)
     .force("collide", d3.forceCollide(function (d) {
-        return radiusScale(d.value['nb_videos']) + 5
+        return radiusScale(d.value['nb_videos'])
     }))
 
     var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
@@ -506,14 +507,14 @@ function draw_cat_analysis() {
         });
 
     simulation.nodes(cat_data)
-        .alpha(0.5).restart();
+        .alpha(1).restart();
 }
 
 function resize_categories() {
 
     var current_max_size = d3.max(cat_data, d => d.value['nb_videos'])
 
-    var temp_radiusScale = d3.scaleSqrt().domain([1, current_max_size]).range([10, 120])
+    var temp_radiusScale = d3.scaleSqrt().domain([1, current_max_size]).range([10, 110])
     var temp_textScale = d3.scaleSqrt().domain([1, current_max_size]).range([5, 30])
 
     catAnalysisSVG.selectAll("circle")
@@ -531,7 +532,7 @@ function resize_categories() {
     simulation.nodes(cat_data)
     .force("collide", d3.forceCollide(function (d) {
         return temp_radiusScale(d.value['nb_videos']) + 5
-    })).alpha(0.5).restart()
+    })).alpha(1).restart()
 }
 
 /************************************************************
@@ -589,6 +590,7 @@ function init_leaderboard(){
     var logo_trophee = d3.select('#Leaderboard')
     .append("div")
     .style("margin-top", "5px")
+    .style("margin-bottom", "5px")
     .html("<i class=\"fa fa-trophy\" aria-hidden=\"true\"></i>")
 
      // create table
@@ -596,30 +598,15 @@ function init_leaderboard(){
      .append("center")
      .append('table')
      .style("border-collapse", "collapse")
-     .style("border", "2px black solid")
+     .style("border", "1px black solid")
      .style("text-anchor", "middle")
      .attr("x", "5")
      .attr("y", "5")
-     .attr("width", "200")
+     .attr("width", "300")
      .attr("height", "100")
 
-    var thead = table.append('thead');
     var tbody = table.append('tbody');
     leaderboard.tbody = tbody;
-
-    // headers
-    var title = ["LEADERBOARD"]
-    thead.append('tr')
-        .selectAll('th')
-        .data(title)
-        .enter()
-            .append('th')
-                .text(function (d) { return d; })
-                .style("border", "1px black solid")
-                .style("padding", "5px")
-                .style("background-color", "lightgray")
-                .style("font-weight", "bold")
-                .style("text-transform", "uppercase")
 }
 
 function draw_leaderboard() {
@@ -661,7 +648,7 @@ function draw_leaderboard() {
         .enter()
             .append('td')
                 .text(function (d) { return d.value.key })
-                .style("border", "1px black solid")
+                .style("border", "1px lightgrey solid")
                 .style("padding", "5px")
                 .style("font-size", "12px")
                 .style("text-anchor", "middle")  
@@ -970,7 +957,7 @@ function get_tags(){
     }
 
 
-    const fontFamily = "Open Sans",
+    const fontFamily = "Helvetica",
         fontScale = d3.scaleLinear().range([20, 120]), // Construction d'une échelle linéaire continue qui va d'une font de 20px à 120px
         fillScale = d3.scaleOrdinal(d3.interpolateGreys(10)); // d3.schemeGreys // Construction d'une échelle discrète composée de 10 couleurs différentes
 
