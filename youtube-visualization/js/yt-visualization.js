@@ -478,10 +478,7 @@ function draw_cat_analysis() {
             draw_trend_heatmap();
             draw_time_graph();
             draw_leaderboard();
-            
-            get_tags();
-            init_layout_cloud();
-            draw_word_cloud();
+            redraw_word_cloud();
         });
 
     // Circles
@@ -913,8 +910,10 @@ function draw_trend_heatmap() {
 
 }
 
-
-// Word Cloud /////////////////////////////////////////////////
+/************************************************************
+* WORD CLOUD
+*
+************************************************************/
 
 // Get height and width of the HTML container
 var svg_height = document.getElementById("WordCloud").clientHeight //.offsetWidth * 0.95
@@ -936,8 +935,8 @@ var svg_wc = d3.select("#WordCloud")
 var words_cloud_material = [];
 
 function get_tags(){
-        
-    let filtered_dataset = dataset.filter(filter_by_time).filter(filter_by_category)
+    
+    filter_dataset();
         
     var tags = d3.nest()
         .key(function(d){return d.tags;})
@@ -1016,7 +1015,11 @@ function draw_word_cloud() {
                 .text(d => d.key);
 }
 
-
+function redraw_word_cloud(){
+    get_tags();
+    init_layout_cloud();
+    draw_word_cloud();
+}
 
 /************************************************************
 * TIMELINE
@@ -1030,6 +1033,7 @@ function draw_word_cloud() {
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
 SLIDER_RATE_LIMIT_MS = 40 //25 Hz
+SLIDER_EXEC_ONCE_DELAY_MS = 50
 SLIDE_MAX = 1000
 date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
 
@@ -1045,9 +1049,13 @@ function init_timeline_range() {
 }
 
 // Change function called upon slider change. It calls refresh functions
-last_slider_change=new Date();
-need_refresh = false;
-timer_running = false;
+var rate_limit = {timer_running: false, timer: undefined, need_refresh:false}
+var rate_limit_once = {timer_running: false, timer: undefined}
+var need_refresh = false;
+var timer_running_limited = false;
+var refresh_timer_limited;
+var timer_running_once = false;
+
 slider.onChange(function (newRange) {
     date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
 
@@ -1056,30 +1064,61 @@ slider.onChange(function (newRange) {
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
     reset_filter_flag();
+
+    // Timer: execute draw_refresh_delayed() at most once every SLIDER_RATE_LIMIT_MS
     if (SLIDER_RATE_LIMIT_MS != 0){
-        // rate limit: use a timer to avoid drawing too often
-        if (timer_running){
-            need_refresh=true;
+        if (rate_limit.timer_running){
+            // if running, just inform a refresh will be needed
+            rate_limit.need_refresh=true;
         } else {
-            timer_running=true;
-            need_refresh=false;
-            draw_time_graph();//draw_refresh();
-            refresh_timer = setTimeout(
+            // otherwise, exec callback and start timer
+            rate_limit.timer_running=true;
+            rate_limit.need_refresh=false;
+            draw_refresh_delayed();
+            // timer: upon time_out, de a refresh if needed
+            rate_limit.timer = setTimeout(
                 function (){
-                    if (need_refresh){draw_time_graph();/*draw_refresh();*/}
-                    timer_running=false;
+                    if (rate_limit.need_refresh){draw_refresh_delayed();}
+                    rate_limit.timer_running=false;
                 },
                 SLIDER_RATE_LIMIT_MS
             )
         }
     }else{
-        draw_time_graph();//draw_refresh();
+        draw_refresh_delayed();
     }
-    draw_refresh();
+
+    // Timer #2: this time, the timer is interrupted and restarted at each call
+    // ==> only one execution once the user has stopped moving the slider
+    draw_refresh_live();
+    if (SLIDER_EXEC_ONCE_DELAY_MS!=0){
+        if (rate_limit_once.timer_running) {clearTimeout(rate_limit_once.timer) }
+        rate_limit_once.timer_running = true;
+        rate_limit_once.timer = setTimeout(
+            function(){draw_refresh_once(),rate_limit_once.timer_running=false;} ,
+            SLIDER_EXEC_ONCE_DELAY_MS);
+
+    }else{
+        draw_refresh_once();
+    }
 });
-function draw_refresh(){
+
+function draw_refresh_once(){
+    redraw_word_cloud();
+}
+function draw_refresh_delayed(){
+    draw_time_graph();
+}
+function draw_refresh_live(){
+    draw_trend_heatmap();
+    draw_cat_analysis();
+    if (leaderboard.tbody) {draw_leaderboard()};
+  
+/*      // Perf check
+        t00 = performance.now()
+        filter_dataset();
         t0 = performance.now()
-        //draw_time_graph();
+        draw_time_graph();
         t1 = performance.now()
         draw_trend_heatmap();
         t2 = performance.now()
@@ -1087,19 +1126,24 @@ function draw_refresh(){
         t3 = performance.now()
         if (leaderboard.tbody) {draw_leaderboard()};
         t4 = performance.now()
-        get_tags();
-        init_layout_cloud();
-        draw_word_cloud();
-        console.log("Call to draw_time_graph took " + (t1 - t0) + " milliseconds.")
-        console.log("Call to draw_trend_heatmap took " + (t2 - t1) + " milliseconds.")
-        console.log("Call to draw_cat_analysis took " + (t3 - t2) + " milliseconds.")
-        console.log("Call to draw_leaderboard took " + (t4 - t3) + " milliseconds.")
+        redraw_word_cloud();
+        t5 = performance.now()
+        console.log("Call to filter data() took " + (t0 - t00) + " milliseconds.")
+        console.log("Call to draw_time_graph() took " + (t1 - t0) + " milliseconds.")
+        console.log("Call to draw_trend_heatmap() took " + (t2 - t1) + " milliseconds.")
+        console.log("Call to draw_cat_analysis() took " + (t3 - t2) + " milliseconds.")
+        console.log("Call to draw_leaderboard() took " + (t4 - t3) + " milliseconds.")
+        console.log("Call to redraw_word_cloud() functions took " + (t5 - t4) + " milliseconds.")
+        */
 }
 
 /************************************************************
 * UTILITY AND FILTERING FUNCTIONS
 *
 * These are generic functions used in all sections to filter data
+* reset_filter_flag() is called whenever the time or category selections change
+* filter_dataset() is called whenever the filtered verions of the dataset need to
+* be used. It makes them available as filtered_dataset and filtered_dataset_time
 ************************************************************/
 
 function filter_by_category(d){
