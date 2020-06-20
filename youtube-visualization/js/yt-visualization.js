@@ -694,13 +694,13 @@ var trend = {
     panel_heigth: document.getElementById("TagTrends").clientHeight,
     svg_width: document.getElementById("TagTrends").clientWidth,
     margin: { top: 8, bottom: 18, left: 120, right: 8 },
-    current_metric: "count"
+    current_metric: "likes_per_view"
 };
 
-var metrics = ["count",
-    "total_views", "total_dislikes", "total_dislikes",
+var metrics = ["likes_per_view", "dislikes_per_view", "like_ratio",
+    "total_views", "total_likes", "total_dislikes",
     "avg_views", "avg_likes", "avg_dislikes",
-    "likes_per_view", "dislikes_per_view", "like_ratio"]
+    "count"]
 
 
 var select_trend = d3.select("#TagTrends")
@@ -862,7 +862,7 @@ function draw_trend_heatmap() {
                 ...d,
                 likes_per_view: d.total_likes / d.total_views,
                 dislikes_per_view: d.total_dislikes / d.total_views,
-                like_ratio: (d.total_likes + .5) / (d.total_likes + d.total_dislikes + 1)
+                like_ratio: (d.total_likes + .5) / (d.total_dislikes + .5)//(d.total_likes + d.total_dislikes + 1)
             };
             return out;
         })
@@ -877,7 +877,7 @@ function draw_trend_heatmap() {
         flat_metrics.filter(filter_by_category),
         d=>d[metric]);
     var trendColors =
-        d3.scaleSequential(d3.interpolateYlGnBu)
+        d3.scaleSequential(d3.interpolateYlGn)//YlGnBu)
             .domain([0 , metric_extent[1]]);
     
     // Draw the heatmap 
@@ -912,6 +912,9 @@ function draw_trend_heatmap() {
 
 /************************************************************
 * WORD CLOUD
+*
+* - Make an array of the 20 most frequent ones
+* - Draw them as a word cloud using d3-cloud (https://github.com/jasondavies/d3-cloud)
 *
 ************************************************************/
 
@@ -961,7 +964,7 @@ function get_tags(){
         words_cloud_material = d3.nest().key(function(d){return d.text;}).rollup(function(leaves) {return leaves.length; })
         .entries(words_cloud_material).sort(function(x, y){ return d3.descending(x.value, y.value)})
 
-       words_cloud_material.length = 20;
+        words_cloud_material.length = 20;
         
         words_cloud_material.forEach(function(element){
             element["text"]=element.key
@@ -1063,7 +1066,7 @@ slider.onChange(function (newRange) {
     d3.select("#range-label")
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
-    reset_filter_flag();
+    reset_filter_flag(); // Reset flag to inform that filters datasets have changed
 
     // Timer: execute draw_refresh_delayed() at most once every SLIDER_RATE_LIMIT_MS
     if (SLIDER_RATE_LIMIT_MS != 0){
