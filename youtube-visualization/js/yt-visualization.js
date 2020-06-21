@@ -1079,8 +1079,8 @@ slider.onChange(function (newRange) {
             // timer: upon time_out, de a refresh if needed
             rate_limit.timer = setTimeout(
                 function (){
-                    if (rate_limit.need_refresh){draw_refresh_delayed();}
                     rate_limit.timer_running=false;
+                    if (rate_limit.need_refresh){draw_refresh_delayed();}
                 },
                 SLIDER_RATE_LIMIT_MS
             )
@@ -1096,7 +1096,7 @@ slider.onChange(function (newRange) {
         if (rate_limit_once.timer_running) {clearTimeout(rate_limit_once.timer) }
         rate_limit_once.timer_running = true;
         rate_limit_once.timer = setTimeout(
-            function(){draw_refresh_once(),rate_limit_once.timer_running=false;} ,
+            function(){rate_limit_once.timer_running=false;draw_refresh_once();} ,
             SLIDER_EXEC_ONCE_DELAY_MS);
 
     }else{
