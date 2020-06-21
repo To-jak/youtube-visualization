@@ -71,7 +71,6 @@ d3.csv('data/clean_data.csv')
         }
 
         dataset = rows;
-  
         
         init_all();
         redraw_all();
@@ -156,7 +155,7 @@ timeGraph_svg.append("text")
     .style("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -timeGraph.height / 2)
-    .attr("y", "-15%")
+    .attr("y", "-12%")
     .style("font-size", "13px")
     .style("font-family", "Arial, Helvetica, sans-serif")
     .text("number of videos")
@@ -310,9 +309,10 @@ var defs = catAnalysisSVG.append('defs');
 let selected_categories = new Set();
 
 // Scales
-var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 120])
+var max_like_ratio = 50
+var radiusScale = d3.scaleSqrt().domain([1, 10000]).range([10, 110])
 var textScale = d3.scaleSqrt().domain([1, 10000]).range([5, 30])
-var likeRatioColor = d3.scaleSequential(d3.interpolateYlGn).domain([0, 30])
+var likeRatioColor = d3.scaleSequential(d3.interpolateYlGn).domain([0, max_like_ratio])
 
 // LINEAR GRADIENT for legend
 var linearGradient = defs.append("linearGradient")
@@ -331,7 +331,7 @@ linearGradient.append("stop")
 //Set the color for the end (100%)
 linearGradient.append("stop")
     .attr("offset", "100%")
-    .attr("stop-color", likeRatioColor(30));
+    .attr("stop-color", likeRatioColor(max_like_ratio));
 
 catAnalysisSVG.append("rect")
 .attr("x", -catAnalysis.width/3)
@@ -362,14 +362,14 @@ catAnalysisSVG.append("text")
 .attr("y", (-catAnalysis.height/2 + 15))
 .style("font-size", "12px")
 .style("font-family", "Arial, Helvetica, sans-serif")
-.text("30+");
+.text(max_like_ratio + "+");
 
 // Force simulation
 var simulation = d3.forceSimulation()
-    .force("x", d3.forceX().strength(0.005))
-    .force("y", d3.forceY().strength(0.005))
+    .force("x", d3.forceX().strength(0.008))
+    .force("y", d3.forceY().strength(0.008))
     .force("collide", d3.forceCollide(function (d) {
-        return radiusScale(d.value['nb_videos']) + 5
+        return radiusScale(d.value['nb_videos'])
     }))
     .on('tick', ticked)
 
@@ -405,7 +405,7 @@ function draw_cat_analysis() {
     // Apply classic force after a potential resize
     simulation.nodes(cat_data)
     .force("collide", d3.forceCollide(function (d) {
-        return radiusScale(d.value['nb_videos']) + 5
+        return radiusScale(d.value['nb_videos'])
     }))
 
     var maxRatio = d3.max(cat_data, function (d) { return d.value['like_ratio']; });
@@ -479,6 +479,7 @@ function draw_cat_analysis() {
             draw_trend_heatmap();
             draw_time_graph();
             draw_leaderboard();
+            redraw_word_cloud();
         });
 
     // Circles
@@ -506,14 +507,14 @@ function draw_cat_analysis() {
         });
 
     simulation.nodes(cat_data)
-        .alpha(0.5).restart();
+        .alpha(1).restart();
 }
 
 function resize_categories() {
 
     var current_max_size = d3.max(cat_data, d => d.value['nb_videos'])
 
-    var temp_radiusScale = d3.scaleSqrt().domain([1, current_max_size]).range([10, 120])
+    var temp_radiusScale = d3.scaleSqrt().domain([1, current_max_size]).range([10, 110])
     var temp_textScale = d3.scaleSqrt().domain([1, current_max_size]).range([5, 30])
 
     catAnalysisSVG.selectAll("circle")
@@ -531,7 +532,7 @@ function resize_categories() {
     simulation.nodes(cat_data)
     .force("collide", d3.forceCollide(function (d) {
         return temp_radiusScale(d.value['nb_videos']) + 5
-    })).alpha(0.5).restart()
+    })).alpha(1).restart()
 }
 
 /************************************************************
@@ -588,7 +589,8 @@ function init_leaderboard(){
 
     var logo_trophee = d3.select('#Leaderboard')
     .append("div")
-    .style("margin-top", "5px")
+    .style("margin-top", "10px")
+    .style("margin-bottom", "10px")
     .html("<i class=\"fa fa-trophy\" aria-hidden=\"true\"></i>")
 
      // create table
@@ -596,30 +598,15 @@ function init_leaderboard(){
      .append("center")
      .append('table')
      .style("border-collapse", "collapse")
-     .style("border", "2px black solid")
+     .style("border", "1px black solid")
      .style("text-anchor", "middle")
      .attr("x", "5")
      .attr("y", "5")
-     .attr("width", "200")
+     .attr("width", "300")
      .attr("height", "100")
 
-    var thead = table.append('thead');
     var tbody = table.append('tbody');
     leaderboard.tbody = tbody;
-
-    // headers
-    var title = ["LEADERBOARD"]
-    thead.append('tr')
-        .selectAll('th')
-        .data(title)
-        .enter()
-            .append('th')
-                .text(function (d) { return d; })
-                .style("border", "1px black solid")
-                .style("padding", "5px")
-                .style("background-color", "lightgray")
-                .style("font-weight", "bold")
-                .style("text-transform", "uppercase")
 }
 
 function draw_leaderboard() {
@@ -661,7 +648,7 @@ function draw_leaderboard() {
         .enter()
             .append('td')
                 .text(function (d) { return d.value.key })
-                .style("border", "1px black solid")
+                .style("border", "1px lightgrey solid")
                 .style("padding", "5px")
                 .style("font-size", "12px")
                 .style("text-anchor", "middle")  
@@ -691,24 +678,25 @@ function draw_leaderboard() {
 // function draw_trend_heatmap() { }
 
 var trend = {
-    panel_heigth: document.getElementById("TagTrends").clientHeight,
+    svg_height: document.getElementById("TagTrends").clientHeight,
     svg_width: document.getElementById("TagTrends").clientWidth,
-    margin: { top: 8, bottom: 18, left: 120, right: 8 },
-    current_metric: "count"
+    margin: { top: 8, bottom: 5, left: 120, right: 8, x_label: 28},
+    current_metric: "likes_per_view"
 };
 
-var metrics = ["count",
-    "total_views", "total_dislikes", "total_dislikes",
+var metrics = ["likes_per_view", "dislikes_per_view", "like_ratio",
+    "total_views", "total_likes", "total_dislikes",
     "avg_views", "avg_likes", "avg_dislikes",
-    "likes_per_view", "dislikes_per_view", "like_ratio"]
+    "count"]
 
 
 var select_trend = d3.select("#TagTrends")
     .append("select")
         .attr("class", "dropdown")
         .attr("id", "trend_dropdown");
-trend.svg_height =  trend.panel_heigth - document.getElementById("trend_dropdown").offsetHeight,
-trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom;
+
+trend.margin.top += document.getElementById("trend_dropdown").offsetHeight,
+trend.height = trend.svg_height - trend.margin.top - trend.margin.bottom - trend.margin.x_label;
 trend.width = trend.svg_width - trend.margin.left - trend.margin.right;
 
 var svg_trend = d3.select("#TagTrends")
@@ -758,6 +746,15 @@ function init_trend_heatmap() {
         .attr("transform", "translate(0," + trend.height + ")")
         .call(d3.axisBottom(trend.xscale));
 
+    // X label
+    let dx = trend.width/2;
+    let dy = trend.height +trend.margin.x_label;
+    svg_trend.append("text")
+        .attr("transform", "translate(" + dx + "," + dy + ")")
+        .attr("class","xaxis_label")
+        .attr("id","trendmap_xaxis_label")
+        .text("Days with 'trending' status")
+
     // Build Y scales and axis:
     trend.yscale
         .range([trend.height, 0])
@@ -786,12 +783,12 @@ trend.mousemove = function (d) {
             "<div class=\"tooltip-header\">" + d.category + "</div>" +
             "<div class=\"tooltip-content\">" +
             "<b>" + d.count + "</b> videos have been trending for <b>" + d.trend_duration + "</b> days<br>" +
-            "Total views : <b>" + d.total_views + "</b><br>" +
-            "Total likes : <b>" + d.total_likes + "</b><br>" +
-            "Total dislikes : <b>" + d.total_dislikes + "</b><br>" +
-            "Avg views per video : <b>" + d.avg_views.toFixed(0) + "</b><br>" +
-            "Avg likes per video : <b>" + d.avg_likes.toFixed(0) + "</b><br>" +
-            "Avg dislikes per video : <b>" + d.avg_dislikes.toFixed(0) + "</b><br>" +
+            "Total views : <b>" + d.total_views.toLocaleString() + "</b><br>" +
+            "Total likes : <b>" + d.total_likes.toLocaleString() + "</b><br>" +
+            "Total dislikes : <b>" + d.total_dislikes.toLocaleString() + "</b><br>" +
+            "Avg views per video : <b>" + Math.round(d.avg_views).toLocaleString() + "</b><br>" +
+            "Avg likes per video : <b>" + Math.round(d.avg_likes).toLocaleString() + "</b><br>" +
+            "Avg dislikes per video : <b>" + Math.round(d.avg_dislikes).toLocaleString() + "</b><br>" +
             "Avg likes per view : <b>" + d.likes_per_view.toFixed(3) + "</b><br>" +
             "Avg dislikes per view : <b>" + d.dislikes_per_view.toFixed(3) + "</b><br>" +
             "Ratio of likes among reactions : <b>" + d.like_ratio.toFixed(3) + "</b>")
@@ -862,7 +859,7 @@ function draw_trend_heatmap() {
                 ...d,
                 likes_per_view: d.total_likes / d.total_views,
                 dislikes_per_view: d.total_dislikes / d.total_views,
-                like_ratio: (d.total_likes + .5) / (d.total_likes + d.total_dislikes + 1)
+                like_ratio: (d.total_likes + .5) / (d.total_dislikes + .5)//(d.total_likes + d.total_dislikes + 1)
             };
             return out;
         })
@@ -877,7 +874,7 @@ function draw_trend_heatmap() {
         flat_metrics.filter(filter_by_category),
         d=>d[metric]);
     var trendColors =
-        d3.scaleSequential(d3.interpolateYlGnBu)
+        d3.scaleSequential(d3.interpolateYlGn)//YlGnBu)
             .domain([0 , metric_extent[1]]);
     
     // Draw the heatmap 
@@ -910,15 +907,20 @@ function draw_trend_heatmap() {
 
 }
 
-
-// Word Cloud /////////////////////////////////////////////////
+/************************************************************
+* WORD CLOUD
+*
+* - Make an array of the 20 most frequent ones
+* - Draw them as a word cloud using d3-cloud (https://github.com/jasondavies/d3-cloud)
+*
+************************************************************/
 
 // Get height and width of the HTML container
 var svg_height = document.getElementById("WordCloud").clientHeight //.offsetWidth * 0.95
 var svg_width = document.getElementById("WordCloud").clientWidth
 
 // set the dimensions and margins of the graph
-var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+var margin = { top: 30, right: 30, bottom: 30, left: 30 },
     width = svg_width - margin.left - margin.right,
     height = svg_height - margin.top - margin.bottom;
 
@@ -928,15 +930,18 @@ var svg_wc = d3.select("#WordCloud")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + width / 2 + ", " + height / 2 + ")") // Centrage du groupe
+    .attr("transform", "translate(" + svg_width / 2 + ", " + svg_height / 2 + ")") // Centrage du groupe
 
 var words_cloud_material = [];
 
 function get_tags(){
-        var tags = d3.nest()
-        .key(function(d){return d.tags;})
-          .entries(dataset);
     
+    filter_dataset();
+        
+    var tags = d3.nest()
+        .key(function(d){return d.tags;})
+        .entries(filtered_dataset);
+
         var list_arr_tags = [];
           tags.forEach(function(element) {
             list_arr_tags.push(element) ;
@@ -956,7 +961,7 @@ function get_tags(){
         words_cloud_material = d3.nest().key(function(d){return d.text;}).rollup(function(leaves) {return leaves.length; })
         .entries(words_cloud_material).sort(function(x, y){ return d3.descending(x.value, y.value)})
 
-       words_cloud_material.length = 20;
+        words_cloud_material.length = 20;
         
         words_cloud_material.forEach(function(element){
             element["text"]=element.key
@@ -965,9 +970,9 @@ function get_tags(){
     }
 
 
-    const fontFamily = "Open Sans",
+    const fontFamily = "Helvetica",
         fontScale = d3.scaleLinear().range([20, 120]), // Construction d'une échelle linéaire continue qui va d'une font de 20px à 120px
-        fillScale = d3.scaleOrdinal(d3.schemeCategory10); // Construction d'une échelle discrète composée de 10 couleurs différentes
+        fillScale = d3.scaleOrdinal(d3.interpolateGreys(10)); // d3.schemeGreys // Construction d'une échelle discrète composée de 10 couleurs différentes
 
 function init_layout_cloud(){
     // Calcul du domain d'entrée de notre fontScale
@@ -985,9 +990,7 @@ function init_layout_cloud(){
         .size([svg_width, svg_height])
         .words(words_cloud_material)
         .padding(1)
-        .rotate(function() {
-            return ~~(Math.random() * 2) * 45;
-        })
+        .rotate(function() {return ~~(Math.random() * 2) * 45;})
         .spiral("rectangular")
         .font(fontFamily)
         .fontSize(d => fontScale(d.size))
@@ -997,7 +1000,10 @@ function init_layout_cloud(){
     }
 
 function draw_word_cloud() {
-    
+
+    svg_wc.selectAll("text")
+            .data([]).exit().remove();
+
     svg_wc.selectAll("text")
             .data(words_cloud_material)
             .enter().append("text") // Ajout de chaque mot avec ses propriétés
@@ -1009,7 +1015,11 @@ function draw_word_cloud() {
                 .text(d => d.key);
 }
 
-
+function redraw_word_cloud(){
+    get_tags();
+    init_layout_cloud();
+    draw_word_cloud();
+}
 
 /************************************************************
 * TIMELINE
@@ -1023,6 +1033,7 @@ function draw_word_cloud() {
 // This scale is used to map slider values to dates
 // range is left undecided until some data hase been loaded
 SLIDER_RATE_LIMIT_MS = 40 //25 Hz
+SLIDER_EXEC_ONCE_DELAY_MS = 50
 SLIDE_MAX = 1000
 date_scale = d3.scaleTime().range([0, SLIDE_MAX]);
 
@@ -1038,9 +1049,13 @@ function init_timeline_range() {
 }
 
 // Change function called upon slider change. It calls refresh functions
-last_slider_change=new Date();
-need_refresh = false;
-timer_running = false;
+var rate_limit = {timer_running: false, timer: undefined, need_refresh:false}
+var rate_limit_once = {timer_running: false, timer: undefined}
+var need_refresh = false;
+var timer_running_limited = false;
+var refresh_timer_limited;
+var timer_running_once = false;
+
 slider.onChange(function (newRange) {
     date_range = [date_scale.invert(newRange.begin), date_scale.invert(newRange.end)];
 
@@ -1048,31 +1063,62 @@ slider.onChange(function (newRange) {
     d3.select("#range-label")
         .html(date_formatter(date_range[0]) + " &mdash; " + date_formatter(date_range[1]));
 
-    reset_filter_flag();
+    reset_filter_flag(); // Reset flag to inform that filters datasets have changed
+
+    // Timer: execute draw_refresh_delayed() at most once every SLIDER_RATE_LIMIT_MS
     if (SLIDER_RATE_LIMIT_MS != 0){
-        // rate limit: use a timer to avoid drawing too often
-        if (timer_running){
-            need_refresh=true;
+        if (rate_limit.timer_running){
+            // if running, just inform a refresh will be needed
+            rate_limit.need_refresh=true;
         } else {
-            timer_running=true;
-            need_refresh=false;
-            draw_time_graph();//draw_refresh();
-            refresh_timer = setTimeout(
+            // otherwise, exec callback and start timer
+            rate_limit.timer_running=true;
+            rate_limit.need_refresh=false;
+            draw_refresh_delayed();
+            // timer: upon time_out, de a refresh if needed
+            rate_limit.timer = setTimeout(
                 function (){
-                    if (need_refresh){draw_time_graph();/*draw_refresh();*/}
-                    timer_running=false;
+                    if (rate_limit.need_refresh){draw_refresh_delayed();}
+                    rate_limit.timer_running=false;
                 },
                 SLIDER_RATE_LIMIT_MS
             )
         }
     }else{
-        draw_time_graph();//draw_refresh();
+        draw_refresh_delayed();
     }
-    draw_refresh();
+
+    // Timer #2: this time, the timer is interrupted and restarted at each call
+    // ==> only one execution once the user has stopped moving the slider
+    draw_refresh_live();
+    if (SLIDER_EXEC_ONCE_DELAY_MS!=0){
+        if (rate_limit_once.timer_running) {clearTimeout(rate_limit_once.timer) }
+        rate_limit_once.timer_running = true;
+        rate_limit_once.timer = setTimeout(
+            function(){draw_refresh_once(),rate_limit_once.timer_running=false;} ,
+            SLIDER_EXEC_ONCE_DELAY_MS);
+
+    }else{
+        draw_refresh_once();
+    }
 });
-function draw_refresh(){
+
+function draw_refresh_once(){
+    redraw_word_cloud();
+}
+function draw_refresh_delayed(){
+    draw_time_graph();
+}
+function draw_refresh_live(){
+    draw_trend_heatmap();
+    draw_cat_analysis();
+    if (leaderboard.tbody) {draw_leaderboard()};
+  
+/*      // Perf check
+        t00 = performance.now()
+        filter_dataset();
         t0 = performance.now()
-        //draw_time_graph();
+        draw_time_graph();
         t1 = performance.now()
         draw_trend_heatmap();
         t2 = performance.now()
@@ -1080,16 +1126,24 @@ function draw_refresh(){
         t3 = performance.now()
         if (leaderboard.tbody) {draw_leaderboard()};
         t4 = performance.now()
-        console.log("Call to draw_time_graph took " + (t1 - t0) + " milliseconds.")
-        console.log("Call to draw_trend_heatmap took " + (t2 - t1) + " milliseconds.")
-        console.log("Call to draw_cat_analysis took " + (t3 - t2) + " milliseconds.")
-        console.log("Call to draw_leaderboard took " + (t4 - t3) + " milliseconds.")
+        redraw_word_cloud();
+        t5 = performance.now()
+        console.log("Call to filter data() took " + (t0 - t00) + " milliseconds.")
+        console.log("Call to draw_time_graph() took " + (t1 - t0) + " milliseconds.")
+        console.log("Call to draw_trend_heatmap() took " + (t2 - t1) + " milliseconds.")
+        console.log("Call to draw_cat_analysis() took " + (t3 - t2) + " milliseconds.")
+        console.log("Call to draw_leaderboard() took " + (t4 - t3) + " milliseconds.")
+        console.log("Call to redraw_word_cloud() functions took " + (t5 - t4) + " milliseconds.")
+        */
 }
 
 /************************************************************
 * UTILITY AND FILTERING FUNCTIONS
 *
 * These are generic functions used in all sections to filter data
+* reset_filter_flag() is called whenever the time or category selections change
+* filter_dataset() is called whenever the filtered verions of the dataset need to
+* be used. It makes them available as filtered_dataset and filtered_dataset_time
 ************************************************************/
 
 function filter_by_category(d){
