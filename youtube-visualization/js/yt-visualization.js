@@ -671,7 +671,7 @@ function draw_leaderboard() {
             .on("mouseout", function () { 
                 d3.select(this).style("background-color", "white") })
             .on("mousemove", d => leaderboard.mousemove(d))
-            .on("mouseleave", leaderboard.mouseleave(),cat_tooltip.style("opacity", 0));
+            .on("mouseleave", leaderboard.mouseleave());
     console.log("=================")
 }
 
