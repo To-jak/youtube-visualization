@@ -561,7 +561,7 @@ function dropdownLeaderboardCB() {
 // Mouse callbacks for tooltip update
 leaderboard.mouseover = function () { cat_tooltip.style("opacity", .9) }
 leaderboard.mousemove = function (d) {
-    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value + "</b> <b>" + leaderboard.tooltip_string )
+    cat_tooltip.html("<div class=\"tooltip-content\">" +"<b>" + d.value.value.toLocaleString() + "</b> <b>" + leaderboard.tooltip_string )
     .style("left", (d3.event.pageX) + 20 + "px")
     .style("top", (d3.event.pageY - 30) + "px"); 
 }
@@ -629,6 +629,7 @@ function draw_leaderboard() {
     var top_channel = []
     for (i=0;i<20 && i<channel_grouped.length;i++) { 
         top_channel[i] = channel_grouped[i]
+        top_channel[i].key = i+1 + ". " + top_channel[i].key
     }
     console.log("top 10 channel by "+sort_attribute+" = ", top_channel)
 
